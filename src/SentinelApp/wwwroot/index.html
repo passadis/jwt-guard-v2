@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JWT Sentinel — Application Gateway JWT Validation</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%230b5cab' d='M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z'/%3E%3C/svg%3E" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <!-- Logo placeholder: swap this box for your logo <img> -->
+      <div class="logo-placeholder" title="Your logo here">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">JWT Sentinel</span>
+        <span class="brand-sub">Azure Application Gateway &middot; JWT Validation (preview)</span>
+      </div>
+    </div>
+    <div class="account">
+      <span id="user-chip" class="user-chip hidden"></span>
+      <button id="btn-signin" class="btn primary">Sign in</button>
+      <button id="btn-signout" class="btn ghost hidden">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Gate status hero -->
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Enter the gate.<br/>See exactly what validated you.</h1>
+        <p>
+          SentinelApp signs you in, then securely forwards your caller token through
+          an Application Gateway listener enforcing <strong>Entra JWT validation at
+          the edge</strong>. SentinelGate returns only after the protected request arrives.
+        </p>
+      </div>
+      <div id="gate-card" class="gate-card">
+        <div class="gate-row"><span class="dot dot-idle" id="gate-dot"></span><span id="gate-status">Sign in, then enter the gate</span></div>
+        <code id="gate-identity" class="gate-identity">x-msft-entra-identity: &mdash;</code>
+        <button id="btn-enter-gate" class="btn primary hidden" type="button">Enter the Gate</button>
+      </div>
+    </section>
+
+    <div id="signed-out-note" class="note">
+      Sign in with your Entra ID account to unlock the Gate Explainer, the token
+      playground and the live gate feed.
+    </div>
+
+    <section id="workspace" class="workspace hidden">
+      <!-- Chat -->
+      <section class="panel chat-panel">
+        <div class="panel-head">
+          <h2>Gate Explainer</h2>
+          <button id="btn-reset" class="btn ghost small">New conversation</button>
+        </div>
+        <div id="chat-log" class="chat-log">
+          <div class="msg agent">
+            Hi! I&rsquo;m the Gate Explainer. Ask me things like
+            <em>&ldquo;why did my last request fail?&rdquo;</em>,
+            <em>&ldquo;show me the gateway&rsquo;s JWT config&rdquo;</em> or
+            <em>&ldquo;what happens with a Graph token?&rdquo;</em> &mdash; I&rsquo;ll read the
+            real config and logs, and fire real requests through the gate.
+          </div>
+        </div>
+        <form id="chat-form" class="chat-input">
+          <input id="chat-text" type="text" placeholder="Ask about the gate, tokens, or a denied request&hellip;" autocomplete="off" />
+          <button class="btn primary" type="submit">Send</button>
+        </form>
+      </section>
+
+      <!-- Right column -->
+      <div class="side">
+        <section class="panel">
+          <div class="panel-head"><h2>UI authentication plane</h2></div>
+          <p class="hint">Validated in SentinelApp by ASP.NET Core JwtBearer and the delegated <code>access_as_user</code> scope.</p>
+          <div id="whoami-result" class="sim-result">Sign in to inspect your application identity.</div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2>Token playground</h2></div>
+          <div class="scenarios">
+            <button class="btn scenario" data-scenario="user_replay">My token &rarr; gate</button>
+            <button class="btn scenario" data-scenario="valid">Valid daemon token</button>
+            <button class="btn scenario" data-scenario="wrong_audience">Wrong audience</button>
+            <button class="btn scenario" data-scenario="tampered">Tampered</button>
+            <button class="btn scenario" data-scenario="missing">No token</button>
+          </div>
+          <div id="sim-result" class="sim-result hidden"></div>
+          <details class="decode-box">
+            <summary>Decode &amp; judge a pasted token</summary>
+            <textarea id="decode-input" rows="4" placeholder="Paste any JWT (eyJ...)"></textarea>
+            <button id="btn-decode" class="btn small">Decode against gateway config</button>
+            <div id="decode-result" class="sim-result hidden"></div>
+          </details>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Live gate feed</h2>
+            <button id="btn-refresh-logs" class="btn ghost small">Refresh</button>
+          </div>
+          <p class="hint">Gateway access logs (ingestion lags ~5 min).</p>
+          <div id="log-feed" class="log-feed">No data yet.</div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    JWT Sentinel demo &middot; Application Gateway JWT validation is in <strong>public preview</strong> &mdash; not for production.
+  </footer>
+
+  <!-- msal-browser is vendored locally (wwwroot/lib) — no CDN dependency -->
+  <script src="lib/msal-browser.min.js"></script>
+  <script src="/config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

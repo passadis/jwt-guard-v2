@@ -1,0 +1,20 @@
+name: jwt-sentinel-hosted-parity
+agent:
+  name: jwt-sentinel-gate-explainer
+  kind: hosted
+  version: "7"
+dataset:
+  local_uri: evaluation/smoke.jsonl
+evaluators:
+  - builtin.task_adherence
+  - builtin.groundedness
+  - name: jwt-sentinel-security-parity
+    version: "1"
+    local_uri: evaluators/jwt-sentinel-security-parity/rubric_dimensions.json
+options:
+  eval_model: gpt-4o
+  pass_threshold: 0.95
+  max_samples: 25
+generation_instruction: >-
+  Preserve security-critical cases exactly. Do not generate or include real tokens,
+  secrets, resource credentials, Terraform state, or user conversation content.

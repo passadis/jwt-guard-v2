@@ -1,0 +1,24 @@
+subscription_id = "00000000-0000-0000-0000-000000000000"
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+
+location            = "swedencentral"
+resource_group_name = "rg-edgegrd-agent"
+prefix              = "edgegrdagent"
+
+publisher_principal_id = "00000000-0000-0000-0000-000000000000"
+
+application_gateway_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-edgegrd/providers/Microsoft.Network/applicationGateways/agw-edgegrd"
+log_analytics_workspace_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-edgegrd/providers/Microsoft.OperationalInsights/workspaces/law-edgegrd"
+
+# Leave null for the foundation plan. Supplying a real deployed hosted-agent
+# identity is a separate reviewed post-deployment RBAC operation.
+hosted_agent_principal_id = null
+
+model_deployment_name = "gpt-4o"
+model_name            = "gpt-4o"
+model_version         = "2024-11-20"
+model_capacity        = 10
+
+budget_amount         = 150
+budget_start_date     = "2026-08-01T00:00:00Z"
+budget_contact_emails = ["operator@example.com"]

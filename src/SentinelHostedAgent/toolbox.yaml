@@ -1,0 +1,3 @@
+description: Curated JWT Sentinel documentation retrieval through Foundry IQ.
+connections:
+  - name: jwt-sentinel-iq

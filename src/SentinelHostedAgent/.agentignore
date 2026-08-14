@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+.env
+.env.*
+!.env.example
+.foundry/results/
+.foundry/suites/
+.foundry/datasets/
+.foundry/evaluators/
+evaluation/
+knowledge/
+*.user
+*.suo
+TestResults/
+coverage/

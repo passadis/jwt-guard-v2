@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "corpus": "jwt-sentinel-docs-v1",
+  "classification": "public-operational-documentation",
+  "repositoryRevision": "urn:jwt-sentinel:revision:pre-git-baseline",
+  "localSources": [
+    {
+      "path": "AGENTS.md",
+      "citationUri": "urn:jwt-sentinel:repo:AGENTS.md"
+    },
+    {
+      "path": "README.md",
+      "citationUri": "urn:jwt-sentinel:repo:README.md"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "citationUri": "urn:jwt-sentinel:repo:docs/ARCHITECTURE.md"
+    },
+    {
+      "path": "docs/DECISIONS.md",
+      "citationUri": "urn:jwt-sentinel:repo:docs/DECISIONS.md"
+    },
+    {
+      "path": "docs/FIELD-NOTES.md",
+      "citationUri": "urn:jwt-sentinel:repo:docs/FIELD-NOTES.md"
+    },
+    {
+      "path": "docs/DEPLOYMENT-RUNBOOK.md",
+      "citationUri": "urn:jwt-sentinel:repo:docs/DEPLOYMENT-RUNBOOK.md"
+    },
+    {
+      "path": "docs/TEST-MATRIX.md",
+      "citationUri": "urn:jwt-sentinel:repo:docs/TEST-MATRIX.md"
+    }
+  ],
+  "learnSources": [
+    "https://learn.microsoft.com/azure/application-gateway/overview",
+    "https://learn.microsoft.com/entra/identity-platform/access-token-claims-reference",
+    "https://learn.microsoft.com/entra/identity-platform/claims-validation",
+    "https://learn.microsoft.com/azure/container-apps/ip-restrictions",
+    "https://learn.microsoft.com/troubleshoot/azure/application-gateway/troubleshoot-application-gateway-key-vault-certificate",
+    "https://learn.microsoft.com/azure/foundry/how-to/develop/framework-hosted-agents",
+    "https://learn.microsoft.com/azure/foundry/agents/concepts/hosted-agents",
+    "https://learn.microsoft.com/azure/foundry/agents/concepts/limits-quotas-regions",
+    "https://learn.microsoft.com/azure/foundry/agents/concepts/what-is-foundry-iq",
+    "https://learn.microsoft.com/azure/foundry/agents/how-to/foundry-iq-connect"
+  ],
+  "excluded": [
+    "docs/history/",
+    "**/*.jsonl outside evaluation/",
+    "**/.terraform/",
+    "**/*.tfstate*",
+    "**/*.tfplan",
+    "**/*.tfvars",
+    "certificates",
+    "tokens",
+    "secrets",
+    "deployment logs",
+    "gateway logs",
+    "user conversations",
+    "arbitrary uploads"
+  ]
+}

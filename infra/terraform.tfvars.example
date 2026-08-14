@@ -1,0 +1,33 @@
+# Required: a domain you control. UI = sentinel.<domain>, API = sentinel-api.<domain>
+domain = "contoso.com"
+
+# Optional overrides
+# prefix        = "jwtsent"
+# location      = "swedencentral"
+# ui_subdomain  = "sentinel"
+# api_subdomain = "sentinel-api"
+
+# If the zone is hosted in Azure DNS, Terraform creates the A records for you:
+# dns_zone_name           = "contoso.com"
+# dns_zone_resource_group = "rg-dns"
+
+# Model (defaults: gpt-4o GlobalStandard, 50K TPM)
+# model_deployment_name = "gpt-4o"
+# model_name            = "gpt-4o"
+# model_version         = "2024-11-20"
+# model_capacity        = 50
+
+# Leave at 0 normally. After an explicitly approved Application Gateway
+# restart, increment this value, review the in-place plan, apply it, and run
+# the complete protected-listener matrix.
+# gateway_config_generation = 0
+
+# Optional Hosted Agent integration pin. Configure both values together and
+# keep AGENT_MODE=Embedded until a separately reviewed shadow/promotion gate.
+# hosted_agent_responses_endpoint = "https://<account>.services.ai.azure.com/api/projects/<project>/agents/<agent>/endpoint/protocols/openai/responses?api-version=v1"
+# hosted_agent_version            = 1
+
+# Gate 4 example. Keep Embedded and the tester set empty until a bounded
+# HostedShadow observation window and exact tester object IDs are approved.
+# agent_mode                       = "Embedded"
+# hosted_shadow_tester_object_ids = []
