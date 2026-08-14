@@ -1,0 +1,29 @@
+name: jwt-sentinel-hosted-agent
+services:
+  ai-project:
+    host: azure.ai.project
+  jwt-sentinel-gate-explainer:
+    project: .
+    host: azure.ai.agent
+    language: csharp
+    uses:
+      - ai-project
+    codeConfiguration:
+      runtime: dotnet_10
+      entryPoint: SentinelHostedAgent.dll
+    environmentVariables:
+      AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+      GATEWAY_RESOURCE_ID: ${GATEWAY_RESOURCE_ID}
+      LAW_WORKSPACE_GUID: ${LAW_WORKSPACE_GUID}
+      PROTECTED_HOST: ${PROTECTED_HOST}
+      TENANT_ID: ${TENANT_ID}
+      API_CLIENT_ID: ${API_CLIENT_ID}
+      BROKER_BASE_URI: ${BROKER_BASE_URI}
+      TOOLBOX_NAME: ${TOOLBOX_NAME}
+    container:
+      resources:
+        cpu: 0.5
+        memory: 1Gi
+    protocols:
+      - protocol: responses
+        version: 2.0.0

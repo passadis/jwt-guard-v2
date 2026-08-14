@@ -16,42 +16,9 @@ The validated environment currently runs **Foundry Hosted Agent version 7** with
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    User[Browser or demo script]
+![JWT Sentinel Stage 1 and Hosted Agent architecture](images/jwt-guard-main.png)
 
-    subgraph Gateway[Azure Application Gateway Standard_v2]
-        UiListener[UI HTTPS listener<br/>no JWT rule on navigation]
-        ProtectedListener[Protected HTTPS listener]
-        JwtRule[Entra JWT validation<br/>Deny + two audiences]
-        UiListener ~~~ ProtectedListener
-        ProtectedListener --> JwtRule
-    end
-
-    subgraph Stage1[Stage 1 resource group and Terraform state]
-        App[SentinelApp<br/>MSAL SPA + JwtBearer APIs + BFF]
-        Gate[SentinelGate<br/>minimal protected API]
-        Logs[Log Analytics<br/>AGWAccessLogs]
-        Arm[ARM<br/>Application Gateway 2025-05-01]
-    end
-
-    subgraph AgentStack[Isolated agent resource group and Terraform state]
-        Hosted[Foundry Hosted Agent v7]
-        IQ[Foundry IQ toolbox]
-        Search[Azure AI Search<br/>approved knowledge base]
-        Hosted --> IQ --> Search
-    end
-
-    User -->|page and delegated API token| UiListener --> App
-    User -->|demo bearer token| ProtectedListener
-    JwtRule -->|x-msft-entra-identity| Gate
-    App -->|caller token only to fixed HTTPS origin| ProtectedListener
-    App -->|managed Responses endpoint| Hosted
-    Hosted -->|get_gateway_config| Arm
-    Hosted -->|query_gate_logs| Logs
-    Hosted -->|app-only broker:<br/>fixed simulations and sanitized decode| App
-    ProtectedListener -. access telemetry .-> Logs
-```
+The running solution keeps the protected application plane and the Hosted Agent knowledge plane in separate resource groups and permanently separate Terraform states. SentinelApp reaches immutable Hosted Agent version 7 through its managed Responses endpoint; the agent reaches approved documentation through the Foundry IQ toolbox and Azure AI Search. Application Gateway remains exclusively in the Stage 1 ownership boundary.
 
 ### Why two hostnames and two Container Apps?
 
@@ -185,30 +152,21 @@ Stage 1 is independently usable with the embedded agent. The Hosted Agent, Searc
 
 ## Demo storyline
 
-```mermaid
-sequenceDiagram
-    actor User
-    participant SPA as SentinelApp SPA/BFF
-    participant AGW as Application Gateway
-    participant Gate as SentinelGate
-    participant Agent as Hosted Agent v7
-    participant ARM as Azure Resource Manager
-    participant Logs as Log Analytics
-    participant IQ as Foundry IQ / Search
+### Flow 1: Enter the protected gate
 
-    User->>SPA: Load UI and sign in with MSAL
-    User->>SPA: POST /api/gate/enter with delegated token
-    SPA->>AGW: Forward token only to configured protected HTTPS origin
-    AGW->>AGW: Validate issuer, signature, lifetime, and audience
-    AGW->>Gate: Inject canonical identity and route to isolated backend
-    Gate-->>SPA: Validated identity result
-    User->>SPA: Ask why requests were allowed or denied
-    SPA->>Agent: Owner-bound hosted session, no caller token
-    Agent->>ARM: Read live gateway configuration at API 2025-05-01
-    Agent->>Logs: Query recent protected-listener records
-    Agent->>IQ: Retrieve approved documentation with citations
-    Agent-->>SPA: Stream evidence-based explanation
-```
+![Sequence flow for entering the JWT-protected gate](images/jwt-sentinel-gate-flow.png)
+
+The SPA signs the user in with authorization code and PKCE, while SentinelApp independently validates the delegated API token. Its BFF can forward that caller token only to the configured protected HTTPS origin and fixed `/enter` path. Application Gateway then enforces the listener-attached JWT `Deny` rule. Invalid requests stop at the edge; allowed requests reach only SentinelGate with the injected Entra identity.
+
+SentinelGate requires exactly two canonical GUIDs, verifies the expected tenant, and treats `x-original-host` only as supplementary routing context. SentinelApp accepts the result only when the response has the expected schema, canonical tenant and object IDs, `gatewayValidated = true`, and `routingContextConsistent = true`.
+
+### Flow 2: Explain the result with Hosted Agent evidence
+
+![Sequence flow for Hosted Agent evidence retrieval and explanation](images/jwt-sentinel-hosted-agent-flow.png)
+
+The authenticated Agent request remains behind SentinelApp's delegated policy and owner-bound session mapping. The browser's bearer token is never sent to Hosted Agent v7. The agent uses its dedicated identity for scoped ARM and Log Analytics reads and retrieves approved documentation through the toolbox, knowledge-base MCP endpoint, knowledge source, and Search index.
+
+Token decoding and controlled simulations cross back through SentinelApp's app-only evidence broker. Only bounded sanitized evidence or fixed scenarios are accepted: the browser cannot select a target host, path, scheme, endpoint, agent version, or execution mode. The final response is streamed back with attributable live evidence and Foundry IQ citations.
 
 Try asking:
 

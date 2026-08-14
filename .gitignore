@@ -121,7 +121,6 @@ deployment-evidence/
 # Local agent instructions and Azure Developer CLI manifests
 CLAUDE.md
 AGENTS.md
-azure.yaml
 
 # Operating-system files
 .DS_Store

@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1060" viewBox="0 0 1600 1060" role="img" aria-labelledby="title description">
+  <title id="title">JWT Sentinel Hosted Agent evidence sequence</title>
+  <desc id="description">Sequence showing an authenticated browser request passing through SentinelApp to Hosted Agent version 7, which retrieves read-only evidence without receiving the caller token.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#faf8ff"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#352070" flood-opacity="0.13"/>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6842d6"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1769e0"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#16865a"/>
+    </marker>
+    <style>
+      .title { font: 700 38px 'Segoe UI', Arial, sans-serif; fill: #102a56; }
+      .subtitle { font: 400 20px 'Segoe UI', Arial, sans-serif; fill: #52647d; }
+      .participant { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #5125b5; }
+      .participant-sub { font: 400 14px 'Segoe UI', Arial, sans-serif; fill: #52647d; }
+      .step { font: 600 16px 'Segoe UI', Arial, sans-serif; fill: #24335d; }
+      .detail { font: 400 14px 'Segoe UI', Arial, sans-serif; fill: #52647d; }
+      .note-title { font: 700 16px 'Segoe UI', Arial, sans-serif; }
+      .note { font: 400 14px 'Segoe UI', Arial, sans-serif; }
+      .lifeline { stroke: #c3b5e8; stroke-width: 2; stroke-dasharray: 7 8; }
+      .message { stroke: #6842d6; stroke-width: 3; fill: none; marker-end: url(#arrow-purple); }
+      .tool { stroke: #1769e0; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
+      .return { stroke: #16865a; stroke-width: 3; fill: none; stroke-dasharray: 8 6; marker-end: url(#arrow-green); }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1060" fill="url(#background)"/>
+  <text x="800" y="58" text-anchor="middle" class="title">Flow 2 — Hosted Agent evidence and explanation</text>
+  <text x="800" y="92" text-anchor="middle" class="subtitle">SentinelApp owns authentication and sessions; Hosted Agent v7 receives no browser token and answers from bounded, attributable evidence.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="42" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#9e83e5" stroke-width="2"/>
+    <rect x="360" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#9e83e5" stroke-width="2"/>
+    <rect x="678" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#9e83e5" stroke-width="2"/>
+    <rect x="996" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#9e83e5" stroke-width="2"/>
+    <rect x="1314" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#9e83e5" stroke-width="2"/>
+  </g>
+
+  <text x="162" y="168" text-anchor="middle" class="participant">Browser</text>
+  <text x="162" y="194" text-anchor="middle" class="participant-sub">Authenticated SPA user</text>
+  <text x="480" y="168" text-anchor="middle" class="participant">SentinelApp</text>
+  <text x="480" y="194" text-anchor="middle" class="participant-sub">API, router and session owner</text>
+  <text x="798" y="168" text-anchor="middle" class="participant">Hosted Agent v7</text>
+  <text x="798" y="194" text-anchor="middle" class="participant-sub">Managed Responses endpoint</text>
+  <text x="1116" y="168" text-anchor="middle" class="participant">Evidence broker</text>
+  <text x="1116" y="194" text-anchor="middle" class="participant-sub">SentinelApp app-only boundary</text>
+  <text x="1434" y="168" text-anchor="middle" class="participant">Bounded evidence sources</text>
+  <text x="1434" y="194" text-anchor="middle" class="participant-sub">ARM read · Logs read · IQ/Search · Gate</text>
+
+  <line x1="162" y1="222" x2="162" y2="916" class="lifeline"/>
+  <line x1="480" y1="222" x2="480" y2="916" class="lifeline"/>
+  <line x1="798" y1="222" x2="798" y2="916" class="lifeline"/>
+  <line x1="1116" y1="222" x2="1116" y2="916" class="lifeline"/>
+  <line x1="1434" y1="222" x2="1434" y2="916" class="lifeline"/>
+
+  <text x="321" y="260" text-anchor="middle" class="step">1. POST /api/agent/chat + delegated token</text>
+  <line x1="162" y1="274" x2="480" y2="274" class="message"/>
+
+  <path d="M480 316 H594 V374 H488" class="message"/>
+  <text x="610" y="331" class="step">2. Validate user and bind owner + browser session</text>
+  <text x="610" y="355" class="detail">raw caller token remains inside SentinelApp</text>
+
+  <text x="639" y="420" text-anchor="middle" class="step">3. Managed endpoint request with opaque session mapping</text>
+  <line x1="480" y1="434" x2="798" y2="434" class="message"/>
+
+  <text x="1116" y="478" text-anchor="middle" class="step">4. get_gateway_config — ARM API 2025-05-01</text>
+  <line x1="798" y1="492" x2="1434" y2="492" class="tool"/>
+  <line x1="1434" y1="521" x2="798" y2="521" class="return"/>
+
+  <text x="1116" y="559" text-anchor="middle" class="step">5. query_gate_logs — scoped Log Analytics read</text>
+  <line x1="798" y1="573" x2="1434" y2="573" class="tool"/>
+  <line x1="1434" y1="602" x2="798" y2="602" class="return"/>
+
+  <text x="1116" y="640" text-anchor="middle" class="step">6. Toolbox → knowledge-base MCP → source → Search index</text>
+  <line x1="798" y1="654" x2="1434" y2="654" class="tool"/>
+  <text x="1116" y="683" text-anchor="middle" class="detail">approved documents and exact citations</text>
+  <line x1="1434" y1="703" x2="798" y2="703" class="return"/>
+
+  <text x="957" y="742" text-anchor="middle" class="step">7. Sanitized decode handle or fixed simulation</text>
+  <line x1="798" y1="756" x2="1116" y2="756" class="message"/>
+  <text x="1275" y="785" text-anchor="middle" class="step">8. App-only request to fixed target</text>
+  <line x1="1116" y1="799" x2="1434" y2="799" class="tool"/>
+  <line x1="1434" y1="828" x2="1116" y2="828" class="return"/>
+  <line x1="1116" y1="850" x2="798" y2="850" class="return"/>
+
+  <text x="639" y="880" text-anchor="middle" class="step">9. Stream evidence-based answer and citations</text>
+  <line x1="798" y1="894" x2="480" y2="894" class="return"/>
+  <line x1="480" y1="925" x2="162" y2="925" class="return"/>
+
+  <rect x="74" y="966" width="1452" height="70" rx="12" fill="#f1edff" stroke="#a890e8"/>
+  <text x="800" y="992" text-anchor="middle" class="note-title" fill="#5125b5">Security boundary</text>
+  <text x="800" y="1016" text-anchor="middle" class="note" fill="#44366b">Never sent to Hosted Agent: caller bearer token, raw pasted JWT, daemon secret, browser-selected endpoint, host, path or execution mode.</text>
+</svg>

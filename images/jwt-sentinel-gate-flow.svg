@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1060" viewBox="0 0 1600 1060" role="img" aria-labelledby="title description">
+  <title id="title">JWT Sentinel protected gate request sequence</title>
+  <desc id="description">Sequence showing browser authentication, SentinelApp BFF forwarding to the fixed protected origin, Application Gateway JWT validation, and SentinelGate identity validation.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fbff"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#183b6b" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1769e0"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#16865a"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c83737"/>
+    </marker>
+    <style>
+      .title { font: 700 38px 'Segoe UI', Arial, sans-serif; fill: #102a56; }
+      .subtitle { font: 400 20px 'Segoe UI', Arial, sans-serif; fill: #52647d; }
+      .participant { font: 700 18px 'Segoe UI', Arial, sans-serif; fill: #0d47a1; }
+      .participant-sub { font: 400 14px 'Segoe UI', Arial, sans-serif; fill: #52647d; }
+      .step { font: 600 16px 'Segoe UI', Arial, sans-serif; fill: #16335f; }
+      .detail { font: 400 14px 'Segoe UI', Arial, sans-serif; fill: #52647d; }
+      .note-title { font: 700 16px 'Segoe UI', Arial, sans-serif; }
+      .note { font: 400 14px 'Segoe UI', Arial, sans-serif; }
+      .lifeline { stroke: #a9bfdf; stroke-width: 2; stroke-dasharray: 7 8; }
+      .message { stroke: #1769e0; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
+      .return { stroke: #16865a; stroke-width: 3; fill: none; stroke-dasharray: 8 6; marker-end: url(#arrow-green); }
+      .deny { stroke: #c83737; stroke-width: 3; fill: none; stroke-dasharray: 8 6; marker-end: url(#arrow-red); }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1060" fill="url(#background)"/>
+  <text x="800" y="58" text-anchor="middle" class="title">Flow 1 — Enter the protected gate</text>
+  <text x="800" y="92" text-anchor="middle" class="subtitle">The caller token crosses only the fixed BFF-to-gateway path; SentinelGate trusts the protected routing boundary and canonical injected identity.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#7caaf0" stroke-width="2"/>
+    <rect x="364" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#7caaf0" stroke-width="2"/>
+    <rect x="680" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#7caaf0" stroke-width="2"/>
+    <rect x="996" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#7caaf0" stroke-width="2"/>
+    <rect x="1312" y="130" width="240" height="92" rx="14" fill="#ffffff" stroke="#7caaf0" stroke-width="2"/>
+  </g>
+
+  <text x="168" y="168" text-anchor="middle" class="participant">Browser</text>
+  <text x="168" y="194" text-anchor="middle" class="participant-sub">MSAL.js SPA</text>
+  <text x="484" y="168" text-anchor="middle" class="participant">Microsoft Entra ID</text>
+  <text x="484" y="194" text-anchor="middle" class="participant-sub">OIDC and token issuance</text>
+  <text x="800" y="168" text-anchor="middle" class="participant">SentinelApp</text>
+  <text x="800" y="194" text-anchor="middle" class="participant-sub">JwtBearer API and fixed BFF</text>
+  <text x="1116" y="168" text-anchor="middle" class="participant">Application Gateway</text>
+  <text x="1116" y="194" text-anchor="middle" class="participant-sub">Protected HTTPS listener</text>
+  <text x="1432" y="168" text-anchor="middle" class="participant">SentinelGate</text>
+  <text x="1432" y="194" text-anchor="middle" class="participant-sub">Isolated protected backend</text>
+
+  <line x1="168" y1="222" x2="168" y2="920" class="lifeline"/>
+  <line x1="484" y1="222" x2="484" y2="920" class="lifeline"/>
+  <line x1="800" y1="222" x2="800" y2="920" class="lifeline"/>
+  <line x1="1116" y1="222" x2="1116" y2="920" class="lifeline"/>
+  <line x1="1432" y1="222" x2="1432" y2="920" class="lifeline"/>
+
+  <text x="326" y="257" text-anchor="middle" class="step">1. Sign in: authorization code + PKCE</text>
+  <line x1="168" y1="270" x2="484" y2="270" class="message"/>
+
+  <text x="326" y="310" text-anchor="middle" class="step">2. Delegated API access token</text>
+  <line x1="484" y1="323" x2="168" y2="323" class="return"/>
+
+  <text x="484" y="365" text-anchor="middle" class="step">3. POST /api/gate/enter + Bearer</text>
+  <line x1="168" y1="378" x2="800" y2="378" class="message"/>
+
+  <path d="M800 420 H900 V470 H808" class="message"/>
+  <text x="916" y="435" class="step">4. Validate delegated API token</text>
+  <text x="916" y="458" class="detail">issuer, signature, lifetime, audience and access_as_user</text>
+
+  <text x="958" y="520" text-anchor="middle" class="step">5. Forward caller token to configured HTTPS origin and /enter only</text>
+  <line x1="800" y1="534" x2="1116" y2="534" class="message"/>
+
+  <path d="M1116 572 H1220 V632 H1124" class="message"/>
+  <text x="1236" y="588" class="step">6. JWT Deny validation</text>
+  <text x="1236" y="612" class="detail">issuer, signature, lifetime + either accepted audience</text>
+
+  <rect x="82" y="654" width="1090" height="64" rx="12" fill="#fff4f4" stroke="#e6a4a4"/>
+  <text x="104" y="680" class="note-title" fill="#a32626">Denied branch</text>
+  <text x="104" y="704" class="note" fill="#7b3434">Missing, wrong-audience, malformed or tampered tokens return 401 at Application Gateway and never reach SentinelGate.</text>
+  <line x1="1116" y1="686" x2="800" y2="686" class="deny"/>
+
+  <text x="1274" y="751" text-anchor="middle" class="step">7. Allowed request + x-msft-entra-identity</text>
+  <line x1="1116" y1="765" x2="1432" y2="765" class="message"/>
+
+  <path d="M1432 800 H1532 V852 H1440" class="message"/>
+  <text x="1410" y="802" text-anchor="end" class="step">8. Require exactly two canonical GUIDs</text>
+  <text x="1410" y="826" text-anchor="end" class="detail">verify tenant; check original host only as routing context</text>
+
+  <text x="1116" y="878" text-anchor="middle" class="step">9. Response: canonical IDs + gateway and routing flags</text>
+  <line x1="1432" y1="892" x2="800" y2="892" class="return"/>
+
+  <text x="484" y="931" text-anchor="middle" class="step">10. Validate strict schema, then return evidence to the SPA</text>
+  <line x1="800" y1="945" x2="168" y2="945" class="return"/>
+
+  <rect x="74" y="982" width="1452" height="54" rx="12" fill="#eef6ff" stroke="#83afea"/>
+  <text x="800" y="1005" text-anchor="middle" class="note-title" fill="#0d47a1">Trust boundary</text>
+  <text x="800" y="1027" text-anchor="middle" class="note" fill="#334d70">Dedicated listener + JWT Deny rule + isolated backend route + restricted ingress + strict injected-identity parsing. A matching x-original-host is not authentication proof.</text>
+</svg>
