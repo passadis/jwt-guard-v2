@@ -6,7 +6,7 @@
 
 <h1 align="center">JWT Sentinel</h1>
 
-<h3 align="center">JWT validation at the edge, explained by a Foundry Hosted Agent grounded with Foundry IQ</h3>
+<h3 align="center">JWT validation at the edge, explained by a Microsoft Foundry Hosted Agent grounded with Foundry IQ</h3>
 
 **Learn how to offload Microsoft Entra JWT validation to Azure Application Gateway, isolate the protected backend, and use an evidence-driven agent to explain the live policy and its outcomes.**
 
