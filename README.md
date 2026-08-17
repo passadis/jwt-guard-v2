@@ -12,7 +12,7 @@
 
 JWT Sentinel is an educational Azure deployment built around a real security boundary. A static MSAL SPA signs users in, Application Gateway validates tokens on a dedicated protected listener, and a minimal SentinelGate backend accepts only the gateway-injected canonical identity. The Gate Explainer reads the actual gateway configuration and access logs, decodes sanitized token evidence, and runs controlled allow/deny scenarios.
 
-The validated environment currently runs **Foundry Hosted Agent version 7** with **Foundry IQ**. The in-process Microsoft Agent Framework 1.15 implementation remains available as the immediate, Terraform-controlled rollback path.
+The validated environment currently runs **Microsoft Foundry Hosted Agent version 7** with **Foundry IQ**. The in-process Microsoft Agent Framework 1.15 implementation remains available as the immediate, Terraform-controlled rollback path.
 
 ## Architecture
 
@@ -96,7 +96,7 @@ terraform -chdir=infra show -no-color tfplan
 terraform -chdir=infra apply tfplan
 ```
 
-Terraform creates the VNet, NAT Gateway, public IPs, Key Vault bootstrap certificate, Log Analytics, three Entra applications, Foundry/Azure AI model deployment, ACR, two Container Apps, DNS records when configured, and Application Gateway through AzAPI `Microsoft.Network/applicationGateways@2025-05-01`.
+Terraform creates the VNet, NAT Gateway, public IPs, Key Vault bootstrap certificate, Log Analytics, three Entra applications, Microsoft Foundry/Azure AI model deployment, ACR, two Container Apps, DNS records when configured, and Application Gateway through AzAPI `Microsoft.Network/applicationGateways@2025-05-01`.
 
 ### 2. Build and deploy both application images
 
@@ -226,7 +226,7 @@ See the [field notes](docs/FIELD-NOTES.md) for reproduced symptoms, evidence, an
 
 ## Cost and cleanup
 
-Billable resources include Application Gateway Standard_v2, NAT Gateway and public IPs, Container Apps, Container Registry, Log Analytics, Key Vault, Azure AI Search, Foundry/Azure AI model usage, and monitoring/evaluation telemetry.
+Billable resources include Application Gateway Standard_v2, NAT Gateway and public IPs, Container Apps, Container Registry, Log Analytics, Key Vault, Azure AI Search, Microsoft Foundry/Azure AI model usage, and monitoring/evaluation telemetry.
 
 Cleanup spans two independent Terraform states and deliberately protected resources. Do not run a blind destroy. Follow the deployment runbook's cleanup approval gate, review DNS and Entra ownership, and inspect both destroy plans. Application Gateway has `prevent_destroy` protection that must never be removed casually.
 
