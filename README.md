@@ -241,6 +241,13 @@ Cleanup spans two independent Terraform states and deliberately protected resour
 - [Agent migration design](docs/AGENT-MIGRATION.md) — permanent isolation, RBAC, evaluation, rollback, and cost model.
 - [Hosted Agent switch guide](docs/HOSTED-AGENT-SWITCH.md) — Hosted/Embedded promotion and rollback procedure.
 
+## Community
+
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+- Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+- Report vulnerabilities using the private process in [SECURITY.md](SECURITY.md).
+- JWT Sentinel is available under the [MIT License](LICENSE).
+
 ---
 
 **Made with ❤️ by [Konstantinos Passadis](https://github.com/passadis)**
