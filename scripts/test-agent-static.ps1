@@ -71,7 +71,7 @@ Assert-AgentCondition (($securityRubric | Measure-Object -Property weight -Sum).
 Assert-AgentCondition ($evaluatorRegistrar -match 'action="store_true"' -and $evaluatorRegistrar -match 'Dry run' -and $evaluatorRegistrar -match 'create_version') "Evaluator registration must default to dry run and require an explicit apply switch for initial creation."
 
 $expectedLocalSources = @(
-    "AGENTS.md",
+    "docs/AGENT-MIGRATION.md",
     "README.md",
     "docs/ARCHITECTURE.md",
     "docs/DECISIONS.md",

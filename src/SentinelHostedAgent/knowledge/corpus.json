@@ -5,8 +5,8 @@
   "repositoryRevision": "urn:jwt-sentinel:revision:pre-git-baseline",
   "localSources": [
     {
-      "path": "AGENTS.md",
-      "citationUri": "urn:jwt-sentinel:repo:AGENTS.md"
+      "path": "docs/AGENT-MIGRATION.md",
+      "citationUri": "urn:jwt-sentinel:repo:docs/AGENT-MIGRATION.md"
     },
     {
       "path": "README.md",

@@ -292,7 +292,7 @@ Before any remote evaluation:
 5. receive explicit approval for the remote evaluation;
 6. review item-level output, tool traces, citations, evaluator errors, latency, and token usage—not only the aggregate score.
 
-Transient rate limits, evaluator errors, content-filter errors, and zero-output responses are not passes. Use bounded retries only for the affected cases and retain the primary run as evidence. Follow the detailed thresholds and result-recording process in the [agent implementation plan](AGENT-IMPLEMENTATION-PLAN.md).
+Transient rate limits, evaluator errors, content-filter errors, and zero-output responses are not passes. Use bounded retries only for the affected cases and retain the primary run as evidence. Apply the thresholds in `eval.yaml`, review item-level results, and record the non-sensitive evidence described below.
 
 ## Hosted and Embedded mode switching
 
@@ -363,5 +363,4 @@ Never attach raw tokens, authorization headers, daemon secrets, complete Terrafo
 - [Test matrix](TEST-MATRIX.md)
 - [Field notes](FIELD-NOTES.md)
 - [Agent migration design](AGENT-MIGRATION.md)
-- [Agent implementation plan](AGENT-IMPLEMENTATION-PLAN.md)
 - [Hosted Agent switch guide](HOSTED-AGENT-SWITCH.md)

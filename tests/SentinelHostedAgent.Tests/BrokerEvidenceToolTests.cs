@@ -50,7 +50,7 @@ public sealed class BrokerEvidenceToolTests
 
         await tool.SimulateAsync("valid");
 
-        Assert.Equal(new Uri("https://guard.mvps.gr/api/agent/broker/simulate"), handler.RequestUri);
+        Assert.Equal(new Uri("https://sentinel.example.com/api/agent/broker/simulate"), handler.RequestUri);
         Assert.Equal("Bearer", handler.AuthorizationScheme);
         Assert.Equal("managed-identity-token", handler.AuthorizationParameter);
     }
@@ -64,12 +64,12 @@ public sealed class BrokerEvidenceToolTests
         await tool.DecodeAsync("22222222-2222-2222-2222-222222222222");
 
         Assert.Equal(
-            new Uri("https://guard.mvps.gr/api/agent/broker/decode/22222222-2222-2222-2222-222222222222"),
+            new Uri("https://sentinel.example.com/api/agent/broker/decode/22222222-2222-2222-2222-222222222222"),
             handler.RequestUri);
     }
 
     private static BrokerEvidenceTool CreateTool(RecordingHandler handler) => new(
-        GatewayLogToolTests.CreateOptions(new Uri("https://guard.mvps.gr/")),
+        GatewayLogToolTests.CreateOptions(new Uri("https://sentinel.example.com/")),
         new HttpClient(handler),
         new FakeCredential());
 

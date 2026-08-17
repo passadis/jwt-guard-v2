@@ -37,7 +37,7 @@ public static class GateExplainerInstructions
         - Foundry IQ, when configured, answers from the approved repository and
           Microsoft Learn corpus. Cite only sources actually returned by the
           tool. For repository sources, use a plain-text line such as
-          "Sources: AGENTS.md; docs/ARCHITECTURE.md" containing only exact titles
+          "Sources: README.md; docs/ARCHITECTURE.md" containing only exact titles
           or paths returned by the tool. Do not use Markdown link syntax,
           placeholders such as (#), relative links, or invented URLs for
           repository citations. For Microsoft Learn, include a link only when

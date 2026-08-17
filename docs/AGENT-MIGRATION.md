@@ -1,10 +1,10 @@
 # Foundry Hosted Agent and Foundry IQ Migration Design
 
-**Status:** Design baseline; implementation requires a separate approval
+**Status:** Accepted and implemented; retained as the public migration rationale
 
 ## Purpose
 
-This document defines a reversible migration of the Stage 1 in-process GateExplainer to a Foundry Hosted Agent, with Foundry IQ providing cited static knowledge. It does not authorize provisioning, deployment, application integration, or changes to the running Application Gateway.
+This document records the reversible migration of the Stage 1 in-process GateExplainer to a Foundry Hosted Agent, with Foundry IQ providing cited static knowledge. Commands and resource names are intentionally environment-neutral; this design is not authorization for an Azure mutation.
 
 The migration preserves these invariants:
 
@@ -38,8 +38,8 @@ The hosted agent may read live gateway configuration and Log Analytics evidence.
 
 The hosted-agent foundation will be a new Terraform root, proposed as `agent-infra/`, with its own provider lock file, variables, outputs, lifecycle, and backend configuration. It will use:
 
-- a new resource group, proposed as `rg-edgegrd-agent`;
-- a new, explicitly approved local state path or unique remote backend key such as `jwt-sentinel-v2/edgegrd-agent.tfstate`;
+- a dedicated agent resource group;
+- a separately approved local state path or unique remote backend key such as `jwt-sentinel-v2/<environment>-agent.tfstate`;
 - a Foundry account/project as required by the supported Hosted Agent path;
 - a model deployment, Azure AI Search, versioned knowledge corpus, Application Insights, and any agent-specific Log Analytics resources;
 - agent-specific budgets, alerts, tags, identities, and role assignments.
@@ -112,7 +112,7 @@ No state file is read across the Stage 1 and agent stacks to discover this ident
 
 The initial repository corpus is an explicit allowlist:
 
-- `AGENTS.md`;
+- `docs/AGENT-MIGRATION.md`;
 - `README.md`;
 - `docs/ARCHITECTURE.md`;
 - `docs/DECISIONS.md`;
@@ -210,7 +210,7 @@ All new agent-platform costs are charged, tagged, reported, and budgeted in the 
 - Application Insights and Log Analytics ingestion/retention;
 - evaluation and judge-model tokens.
 
-The planning pass must provide a current Azure pricing estimate and an approved monthly lab cap. No cost estimate in repository documentation should be treated as a quote. The existing Application Gateway and Stage 1 resource costs remain owned by `rg-edgegrd` and are not attributed to the migration.
+The planning pass must provide a current Azure pricing estimate and an approved monthly lab cap. No cost estimate in repository documentation should be treated as a quote. Existing Application Gateway and Stage 1 resource costs remain owned by the Stage 1 resource group and are not attributed to the migration.
 
 ## Preview exposure
 
@@ -237,7 +237,7 @@ Rollback never restarts or updates Application Gateway. The embedded implementat
 
 Approve this document, the ADR, exact resource ownership, corpus, identity scopes, session model, evaluation gates, cost cap, and rollback.
 
-The concrete proposed values and command boundaries are in the [Isolated Implementation Plan](AGENT-IMPLEMENTATION-PLAN.md).
+Concrete values belong in ignored environment configuration and reviewed plans, not public documentation.
 
 ### Phase 1 — Isolated planning
 
@@ -259,16 +259,11 @@ Add the managed-endpoint client, scenario broker, session binding, and server-si
 
 Run both paths during the approved observation period. Preserve the embedded rollback. The agent infrastructure and state remain permanently separate regardless of migration success.
 
-## Open decisions required before implementation
+## Implementation outcome
 
-- exact agent resource-group name, region, Terraform state location/key, and cost cap;
-- Foundry account/project ownership model and supported Hosted Agent API/runtime versions at planning time;
-- model name, deployment, capacity, quota, and content-safety policy;
-- exact Search topology, index schema, knowledge-base API version, and ingestion identity;
-- scenario-broker app-role contract, endpoint route, and rate limits;
-- hosted invocation role for SentinelApp's managed identity;
-- session-reference storage and encryption if SentinelApp is scaled beyond one replica;
-- measurable latency and evaluation thresholds, observation period, and hosted-default approval authority.
+The migration was completed through the phases above: first preserving `Embedded`, then deploying and evaluating the isolated Hosted Agent and IQ stack, then using allowlisted `HostedShadow`, and finally promoting `Hosted` after tool, citation, session, security, latency, telemetry-redaction, and rollback checks passed. The embedded implementation remains present as the operator-controlled rollback path.
+
+Future environments must still choose their own region, state location, cost cap, model capacity, Search topology, immutable agent version, and observation thresholds. Those values must be reviewed at deployment time and must not be copied from another environment.
 
 ## Authoritative implementation references
 

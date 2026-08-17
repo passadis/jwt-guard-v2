@@ -9,26 +9,26 @@ public sealed class HostedAgentOptionsTests
     {
         var options = Create();
 
-        Assert.Equal("apiguard.mvps.gr", options.ProtectedHost);
-        Assert.Equal(new Uri("https://guard.mvps.gr/"), options.BrokerOrigin);
+        Assert.Equal("sentinel-api.example.com", options.ProtectedHost);
+        Assert.Equal(new Uri("https://sentinel.example.com/"), options.BrokerOrigin);
         Assert.Equal("agent-iq", options.ToolboxName);
     }
 
     [Theory]
-    [InlineData("http://guard.mvps.gr/")]
-    [InlineData("https://guard.mvps.gr/path")]
-    [InlineData("https://guard.mvps.gr/?next=https://evil.example")]
-    [InlineData("https://user@guard.mvps.gr/")]
-    [InlineData("https://guard.mvps.gr:8443/")]
+    [InlineData("http://sentinel.example.com/")]
+    [InlineData("https://sentinel.example.com/path")]
+    [InlineData("https://sentinel.example.com/?next=https://evil.example")]
+    [InlineData("https://user@sentinel.example.com/")]
+    [InlineData("https://sentinel.example.com:8443/")]
     public void RejectsNoncanonicalBrokerOrigins(string brokerOrigin)
     {
         Assert.Throws<InvalidOperationException>(() => Create(brokerOrigin));
     }
 
     [Theory]
-    [InlineData("https://apiguard.mvps.gr/")]
-    [InlineData("apiguard.mvps.gr/path")]
-    [InlineData("apiguard.mvps.gr:443")]
+    [InlineData("https://sentinel-api.example.com/")]
+    [InlineData("sentinel-api.example.com/path")]
+    [InlineData("sentinel-api.example.com:443")]
     [InlineData("apiguard")]
     public void RejectsProtectedHostThatIsNotAPlainDnsName(string protectedHost)
     {
@@ -36,15 +36,15 @@ public sealed class HostedAgentOptionsTests
     }
 
     private static HostedAgentOptions Create(
-        string brokerOrigin = "https://guard.mvps.gr/",
-        string protectedHost = "apiguard.mvps.gr") => HostedAgentOptions.FromValues(
+        string brokerOrigin = "https://sentinel.example.com/",
+        string protectedHost = "sentinel-api.example.com") => HostedAgentOptions.FromValues(
             "https://aif-example.services.ai.azure.com/api/projects/proj-example",
             "gpt-4o",
-            "/subscriptions/9d47bf93-091d-480e-a512-1e918864fee7/resourceGroups/rg-edgegrd/providers/Microsoft.Network/applicationGateways/agw-edgegrd",
-            "11111111-1111-1111-1111-111111111111",
+            "/subscriptions/11111111-1111-4111-8111-111111111111/resourceGroups/rg-example/providers/Microsoft.Network/applicationGateways/agw-example",
+            "22222222-2222-4222-8222-222222222222",
             protectedHost,
-            "35de4c50-7dcd-4871-8685-61789c017da2",
-            "8ad40006-a261-46d2-bc79-362cd6a42256",
+            "33333333-3333-4333-8333-333333333333",
+            "44444444-4444-4444-8444-444444444444",
             brokerOrigin,
             "agent-iq");
 }

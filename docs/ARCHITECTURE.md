@@ -2,9 +2,9 @@
 
 ## Scope
 
-This document describes the implemented Stage 1 topology. It is the concise operational architecture reference; `DESIGN.md` retains the fuller design history and alternatives.
+This document describes the implemented topology without deployment-specific identifiers. Stage 1 uses two Azure Container Apps behind one Azure Application Gateway. SentinelApp routes GateExplainer requests to an immutable Foundry Hosted Agent version through `AGENT_MODE=Hosted`; the in-process Microsoft Agent Framework implementation remains intact as the immediate rollback path.
 
-Stage 1 uses two Azure Container Apps behind one Azure Application Gateway. SentinelApp revision `ca-edgegrd--0000020` now routes Gate Explainer requests to immutable Foundry Hosted Agent version 7 through `AGENT_MODE=Hosted`; the in-process Microsoft Agent Framework implementation remains intact as the immediate rollback path. Foundry Agent and IQ infrastructure stays permanently isolated from Stage 1 infrastructure in its own resource group and Terraform state. Version 7 requires evidence-tool routing and the client fails closed on explicit failed/incomplete stream events, with one fresh-session retry limited to safe read-only zero-output protocol failures. The final Gate 5 promotion changed only SentinelApp configuration and did not change or restart Application Gateway.
+Foundry Agent and IQ infrastructure stays permanently isolated from Stage 1 infrastructure in its own resource group and Terraform state. The Hosted client fails closed on explicit failed or incomplete stream events, with one fresh-session retry limited to safe, read-only, zero-output protocol failures. Promoting or rolling back the Agent changes only SentinelApp configuration and does not modify or restart Application Gateway.
 
 ## System context
 
@@ -15,9 +15,11 @@ flowchart LR
     GW -->|UI rule| APP[SentinelApp Container App]
     APP -->|Caller token via protected hostname| GW
     GW -->|API rule + JWT Deny| GATE[SentinelGate Container App]
-    APP -->|Managed identity| ARM[Azure Resource Manager]
-    APP -->|Managed identity| LAW[Log Analytics]
-    APP -->|Managed identity| AI[Foundry / Azure AI model]
+    APP -->|Managed Responses endpoint| HA[Foundry Hosted Agent]
+    HA -->|Read-only managed identity| ARM[Azure Resource Manager]
+    HA -->|Read-only managed identity| LAW[Log Analytics]
+    HA -->|Toolbox + MCP| IQ[Foundry IQ / Azure AI Search]
+    HA -->|App-only evidence broker| APP
     GW -->|Certificate secret| KV[Key Vault]
 ```
 
@@ -33,13 +35,13 @@ SentinelApp is the UI, control, and explanation plane. It provides:
 - ASP.NET Core JwtBearer authentication;
 - delegated `access_as_user` authorization for all `/api/*` endpoints;
 - the `/api/gate/enter` BFF endpoint;
-- Microsoft Agent Framework 1.15 GateExplainer sessions;
-- token decoding against live gateway policy;
-- Application Gateway configuration inspection through ARM;
-- protected-traffic queries through Log Analytics;
+- a server-side router for `Embedded`, `HostedShadow`, and `Hosted` modes;
+- the Microsoft Agent Framework 1.15 embedded rollback implementation;
+- local token decoding and bounded sanitized-evidence staging;
+- app-only evidence-broker routes for the Hosted Agent;
 - controlled missing, valid, wrong-audience, tampered, and caller-replay simulations.
 
-SentinelApp uses a user-assigned managed identity for ACR pull, Foundry/OpenAI user access, resource-group Reader, and Log Analytics Reader. Its daemon credential is stored as a Container App secret for controlled simulations and is never passed to the browser or Agent.
+SentinelApp uses a user-assigned managed identity for ACR pull and the narrowly scoped permissions needed to invoke the Hosted Agent. Its daemon credential is stored as a Container App secret for controlled simulations and is never passed to the browser or either Agent implementation. The Hosted Agent has its own identity for resource-scoped gateway, Log Analytics, and Search reads.
 
 Agent sessions are stored in process, bound to the authenticated tenant/object pair, serialized per session, limited to 250 active entries, and expired after 30 minutes. SentinelApp therefore has exactly one replica in Stage 1.
 
@@ -128,10 +130,10 @@ The repository currently uses fresh local state by default. A remote backend may
 
 ## Stage boundary
 
-Stage 1 deliberately retains the in-process Agent Framework implementation but does not own the Foundry Hosted Agent, Foundry IQ knowledge source, distributed session store, or hosted identity. Those components remain in the permanently separate `rg-edgegrd-agent` resource group and `agent-infra/terraform.tfstate`; they have no route through Application Gateway. The current SentinelApp revision explicitly sets `AGENT_MODE=Hosted` and pins the reviewed Hosted Agent Responses endpoint and immutable version 7. The Hosted Agent alone holds the exact `BROKER_BASE_URI=https://guard.mvps.gr` origin. The reviewed `infra/tfplan-gate5-v7-rollback` plan can restore `Embedded` without modifying the gateway.
+Stage 1 retains the in-process Agent Framework implementation but does not own the Foundry Hosted Agent, Foundry IQ knowledge source, hosted identity, Search service, or agent telemetry. Those components remain in a permanently separate resource group and `agent-infra` state and have no route through Application Gateway. SentinelApp pins a reviewed immutable Hosted Agent endpoint/version pair and can restore `Embedded` without modifying the gateway.
 
-The isolated candidate's Foundry account and project are connected to `appi-edgegrd-agent`, backed by `law-edgegrd-agent`. The project identity has only component-scoped Log Analytics Reader and Privileged Monitoring Data Reader access for hosted traces and evaluations. The connection credential is held as sensitive Terraform state and is not emitted as an output. The hosted runtime identity retains only the previously approved resource-scoped gateway, Stage 1 log-workspace, and Search reader roles.
+The published IQ corpus, Search index, knowledge source, knowledge base, RemoteTool connection, and toolbox are agent-stack artifacts. The Hosted Agent identity has only the resource-scoped gateway, Log Analytics, and Search-reader permissions required by its tools. Publication uses a separate operator-controlled identity with write access. Connection credentials remain in sensitive state and are not emitted as outputs.
 
-The published IQ corpus, Search index, knowledge source, knowledge base, RemoteTool connection, and toolbox remain agent-stack artifacts. Final Gate 5 validation correlated successful `get_gateway_config` plus ARM HTTP 200, `query_gate_logs` plus Log Analytics HTTP 200, IQ retrieval, the fixed simulation broker, and sanitized decode broker calls. Continuity and explicit reset passed; security prompts caused no prohibited tool execution. All 12 v7 invocations and 19 model calls succeeded, and a count-only scan of 537 correlated rows found no token or secret-value patterns. One safe read-only IQ call used the single allowed fresh-session retry. The embedded agent remains available only as the preserved rollback implementation. The [agent migration design](AGENT-MIGRATION.md) defines permissions, data governance, and rollback.
+The integration boundary keeps `/api/agent/chat` and `/api/agent/reset` stable behind the SPA's delegated policy. A server-only router supports `Embedded`, `HostedShadow`, and `Hosted`; an absent setting fails safely to `Embedded`. `HostedShadow` additionally requires an operator-configured allowlist of canonical Entra object IDs. The browser cannot select the mode, tester identity, endpoint, or version.
 
-The integration boundary keeps `/api/agent/chat` and `/api/agent/reset` stable behind the SPA's delegated policy. A server-only router supports `Embedded`, `HostedShadow`, and `Hosted`; the absent setting still fails safely to `Embedded`. `HostedShadow` additionally requires a non-empty operator-configured set of unique lowercase canonical Entra object IDs. The browser cannot select the mode, tester identity, endpoint, or version. Hosted sessions are keyed by canonical authenticated owner plus browser session GUID and retain only opaque Foundry session/conversation identifiers and the server-derived pseudonymous identity that scopes their Foundry operations. Local reset or expiry removes the whole mapping; any future remote history or deletion operation must use that same delegated-user identity. A separate broker policy rejects delegated callers and requires the exact tenant, `agent.scenario.execute` application role, and configured Hosted Agent principal. ASP.NET Core may expose that application role as either the raw `roles` claim or the framework-mapped `ClaimTypes.Role`; both feed the same exact-role comparison. The role is granted only to the deployed runtime principal. SentinelApp has Foundry Agent Consumer and the single user-identity-impersonation data action at the exact Hosted Agent scope. Raw tokens remain local: the browser's authenticated decode flow produces bounded sanitized evidence, while the server retains a short-lived opaque handle that is never returned to the browser. Version 7 and its fixed endpoint are pinned, and the operator-controlled mode is now `Hosted`; the shadow allowlist is empty.
+Hosted sessions are keyed by authenticated owner plus browser session GUID and retain only opaque Foundry session/conversation identifiers and a server-derived pseudonymous identity. Reset or expiry removes the complete mapping. A separate broker policy rejects delegated callers and requires the exact tenant, `agent.scenario.execute` application role, and configured Hosted Agent principal. Raw tokens remain local: SentinelApp produces bounded sanitized evidence and retains its short-lived opaque handle server-side. The [agent migration design](AGENT-MIGRATION.md) defines permissions, data governance, validation, and rollback.

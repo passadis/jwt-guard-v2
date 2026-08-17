@@ -9,9 +9,9 @@ public sealed class GatewayLogToolTests
     [Fact]
     public void QueryUsesOriginalHostOnlyAsBoundedTelemetryContext()
     {
-        var query = GatewayLogTool.BuildQuery("apiguard.mvps.gr", 60, 401, "tx-1");
+        var query = GatewayLogTool.BuildQuery("sentinel-api.example.com", 60, 401, "tx-1");
 
-        Assert.Contains("OriginalHost =~ 'apiguard.mvps.gr'", query, StringComparison.Ordinal);
+        Assert.Contains("OriginalHost =~ 'sentinel-api.example.com'", query, StringComparison.Ordinal);
         Assert.Contains("RequestUri startswith '/enter'", query, StringComparison.Ordinal);
         Assert.Contains("HttpStatus == 401", query, StringComparison.Ordinal);
         Assert.Contains("TransactionId == 'tx-1'", query, StringComparison.Ordinal);
@@ -34,11 +34,11 @@ public sealed class GatewayLogToolTests
     internal static HostedAgentOptions CreateOptions(Uri? broker = null) => HostedAgentOptions.FromValues(
         "https://aif-example.services.ai.azure.com/api/projects/proj-example",
         "gpt-4o",
-        "/subscriptions/9d47bf93-091d-480e-a512-1e918864fee7/resourceGroups/rg-edgegrd/providers/Microsoft.Network/applicationGateways/agw-edgegrd",
-        "11111111-1111-1111-1111-111111111111",
-        "apiguard.mvps.gr",
-        "35de4c50-7dcd-4871-8685-61789c017da2",
-        "8ad40006-a261-46d2-bc79-362cd6a42256",
+        "/subscriptions/11111111-1111-4111-8111-111111111111/resourceGroups/rg-example/providers/Microsoft.Network/applicationGateways/agw-example",
+        "22222222-2222-4222-8222-222222222222",
+        "sentinel-api.example.com",
+        "33333333-3333-4333-8333-333333333333",
+        "44444444-4444-4444-8444-444444444444",
         broker?.AbsoluteUri,
         null);
 

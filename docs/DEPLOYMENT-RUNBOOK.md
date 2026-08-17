@@ -3,7 +3,7 @@
 **Runbook version:** 1.0  
 **Date:** 2026-08-04  
 **Applies to:** Clean JWT Sentinel repository and a new, isolated Azure environment  
-**Primary references:** `AGENTS.md`, `DESIGN.md`, `docs/FIELD-NOTES.md`  
+**Primary references:** `README.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/FIELD-NOTES.md`
 **Shell examples:** PowerShell 7 unless marked Bash  
 **Deployment model:** Terraform infrastructure followed by ACR build/Container App update and trusted-certificate issuance
 
@@ -244,9 +244,9 @@ Verify:
 
 ```powershell
 $RequiredFiles = @(
-  "AGENTS.md",
-  "CLAUDE.md",
-  "DESIGN.md",
+  "README.md",
+  "docs/ARCHITECTURE.md",
+  "docs/DECISIONS.md",
   "docs/FIELD-NOTES.md",
   "infra/providers.tf",
   "infra/variables.tf",
@@ -441,7 +441,7 @@ Do not overwrite records belonging to the running environment.
 
 The deployment identity must be able to:
 
-- create the Azure resources listed in `DESIGN.md`;
+- create the Azure resources described in `docs/ARCHITECTURE.md` and represented by the reviewed Terraform plan;
 - create role assignments;
 - create Entra applications and service principals;
 - grant the required delegated/application permissions;
@@ -1556,8 +1556,8 @@ After successful validation:
 1. Update `README.md` with environment-neutral commands.
 2. Update `docs/FIELD-NOTES.md` only with reproduced observations.
 3. Mark hypotheses clearly.
-4. Update `DESIGN.md` when architecture changes.
-5. Keep `AGENTS.md` aligned with hard safety rules.
+4. Update `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` when architecture or accepted decisions change.
+5. Keep the public runbook and contributor safety policy aligned with hard safety rules.
 6. Remove plan files and temporary outputs.
 7. Run a repository secret scan before Git publication.
 
@@ -1566,7 +1566,7 @@ Example basic check:
 ```powershell
 git status --short
 git diff --check
-git grep -n -I -E "(client_secret|DAEMON_CLIENT_SECRET|BEGIN PRIVATE KEY|BEGIN CERTIFICATE)"
+git grep -n -I -E "(client_secret|DAEMON_CLIENT_SECRET|BEGIN[ ]PRIVATE KEY|BEGIN[ ]CERTIFICATE)"
 ```
 
 Review matches; configuration variable names are not automatically secret leaks, but values may be.

@@ -246,7 +246,7 @@ Read the gateway through a JWT-capable ARM API and verify:
 
 ### Prevention
 
-- Keep the forbidden command in `AGENTS.md`.
+- Keep the forbidden command documented in the deployment runbook and contributor safety policy.
 - Add a CI check that flags it in scripts and documentation.
 - Treat a successful gateway update as incomplete until the no-token test fails closed.
 
@@ -924,9 +924,9 @@ Before removing any workaround, verify:
 
 A documentation claim is not enough to remove a workaround that previously prevented a security bypass. Prove the new behavior through the full acceptance matrix.
 
-## 24. Rules that must remain visible to coding agents
+## 24. Rules that must remain visible to automation and contributors
 
-The following rules belong in `AGENTS.md` and must not be buried only here:
+The following rules must remain visible in contributor guidance and must not be buried only here:
 
 1. Never reuse the original Terraform state.
 2. Never use `az network application-gateway update`.
@@ -949,7 +949,7 @@ The correct interoperability behavior is to inspect both representations and app
 
 ## 26. Gate 4 preflight exposed mixed JWT runtime health
 
-On 10 August 2026, the Gate 4 SentinelApp candidate was built and deployed as revision `ca-edgegrd--0000008` while retaining `AGENT_MODE=Embedded`. The image-only update did not change SentinelGate, Application Gateway, its configuration-generation value, networking, DNS, certificates, or agent infrastructure. Trusted SentinelApp health passed.
+During HostedShadow preflight, a SentinelApp candidate was deployed while retaining `AGENT_MODE=Embedded`. The image-only update did not change SentinelGate, Application Gateway, its configuration-generation value, networking, DNS, certificates, or agent infrastructure. Trusted SentinelApp health passed.
 
 The required protected-listener preflight did not pass consistently. In the first full matrix, missing-token, wrong-audience, and valid-token checks passed before the tampered-token request returned HTTP 500 after approximately 60 seconds. A targeted follow-up then returned HTTP 500 for a missing token after 60.41 seconds and HTTP 401 for a tampered token in 0.32 seconds.
 
@@ -971,13 +971,13 @@ Shadow containment worked: user-visible content remained embedded, the redaction
 
 The local SentinelApp source candidate now derives the pseudonymous owner once per mapping, applies the identical `x-ms-user-identity` to session creation, conversation creation, and response invocation, and sends `agent_session_id` with the opaque conversation binding. Focused and static tests enforce these invariants. At the local-correction stage, no image was deployed, no Azure or Terraform state changed, and no new Gate 4 evidence was produced.
 
-The subsequent approved deployment used ACR quick build `dta` and immutable image `sentinel-app:hosted-contract-20260813-191559`. Only SentinelApp changed, to revision `ca-edgegrd--0000011`; it retained `AGENT_MODE=Embedded`, had no shadow allowlist, and received 100% traffic. Trusted UI health and the vendored MSAL asset returned HTTP 200, both Application Gateway backend pools were healthy, and the protected-listener matrix passed `401, 401, 200 SentinelGate, 401`. SentinelGate remained on revision `ca-edgegrd-gate--0000003`. No Terraform state or Application Gateway configuration changed. Because Embedded mode makes no Hosted request, the corrected identity/session contract still requires a new bounded Gate 4 observation.
+The corrected immutable image was first deployed only to SentinelApp in `Embedded`, with no shadow allowlist. Trusted UI health, the vendored MSAL asset, both gateway backend pools, and the protected-listener matrix passed. SentinelGate, both Terraform states, and Application Gateway configuration remained unchanged. Because Embedded mode makes no Hosted request, the corrected identity/session contract still required a bounded shadow observation.
 
 The corrected Gate 4 repeat used a reviewed `0 add, 1 change, 0 destroy` activation plan and a separately saved rollback plan. Four read-only prompts returned embedded HTTP 200 SSE with `[DONE]` while all four Hosted comparisons completed. Foundry recorded four history HTTP 200 calls, four Responses HTTP 200 calls, four successful model calls, four successful agent invocations, and successful toolbox POST operations. The four prompts shared one Hosted session and conversation, recorded 3,195 input and 817 output tokens, and had Hosted P95 of approximately 11.8 seconds. A count-only scan across 108 correlated rows found no JWT-like, bearer, client-secret, or private-key indicators.
 
 One `GET` probe to the IQ toolbox MCP endpoint returned HTTP 405 in 63 ms. It did not fail an invocation: toolbox POST operations returned 200/204 and SentinelApp recorded four Hosted completion events with no failures. Retain this as a non-fatal preview-protocol warning and recheck it after platform or toolbox-client upgrades.
 
-At the 60-minute deadline, the reviewed rollback restored `Embedded`, removed the tester allowlist, produced healthy SentinelApp revision `ca-edgegrd--0000013`, passed the complete `401, 401, 200 SentinelGate, 401` matrix, and converged with no Terraform changes. The client-contract blocker is cleared. Apply the same delegated identity to any future remote reset, deletion, or history operation; the current reset remains local and removes the complete mapping without a Foundry call.
+At the observation deadline, the reviewed rollback restored `Embedded`, removed the tester allowlist, passed the complete protected-listener matrix, and converged with no Terraform changes. The client-contract blocker was cleared. Apply the same delegated identity to any future remote reset, deletion, or history operation; the current reset remains local and removes the complete mapping without a Foundry call.
 
 Do not retry the unchanged Gate 4 candidate. The failure is deterministic at the conversation/history boundary and is unrelated to Application Gateway, SentinelGate, the Hosted Agent runtime identity, or the extension restart.
 
@@ -987,13 +987,13 @@ Do not retry the unchanged Gate 4 candidate. The failure is deterministic at the
 **Severity:** High  
 **Area:** Foundry Hosted Agent promotion
 
-Gate 5 used an explicitly reviewed `0 add, 1 change, 0 destroy` Terraform plan that changed only SentinelApp `AGENT_MODE` from `Embedded` to `Hosted`. Live revision `ca-edgegrd--0000014` retained the corrected immutable image and had no shadow allowlist. Trusted UI health, authenticated `/api/whoami`, strict BFF entry through SentinelGate, an IQ-grounded answer with repository citations, and same-session continuity all passed.
+Gate 5 used an explicitly reviewed plan that changed only SentinelApp `AGENT_MODE` from `Embedded` to `Hosted`. The candidate retained the corrected immutable image and had no shadow allowlist. Trusted UI health, authenticated `/api/whoami`, strict BFF entry through SentinelGate, an IQ-grounded answer with repository citations, and same-session continuity all passed.
 
 Mandatory tool parity did not pass. Two identical prompts asking the Hosted Agent to inspect the live gateway configuration returned SentinelApp's controlled failure message. The failures occurred in 608–782 ms with `HostedProtocolException: Responses stream ended without a completion event.` Agent-owned telemetry nevertheless recorded HTTP 200 for `/responses`, successful model and agent operations, successful history lookup, and HTTP 201 response persistence. No broker-tool dependency appeared for either request.
 
 This evidence rules out a SentinelApp outage, token acquisition delay, Application Gateway failure, and ordinary endpoint authorization failure. It does not yet prove whether the cause is model tool selection, the hosted runtime's terminal-event behavior, or a preview Responses contract change. Do not describe the HTTP 200 managed operations as tool success: the broker was not invoked and the user-visible stream failed closed.
 
-The pre-reviewed rollback plan changed only `AGENT_MODE` to `Embedded` and created healthy revision `ca-edgegrd--0000015`. Both Application Gateway backend pools were healthy, embedded chat streamed successfully, and the protected listener passed missing-token 401, wrong-audience 401, valid-token 200 from SentinelGate with strict schema checks, and tampered-token 401. No Application Gateway, SentinelGate, agent-infrastructure, DNS, or certificate change was made.
+The pre-reviewed rollback plan changed only `AGENT_MODE` to `Embedded`. Both Application Gateway backend pools were healthy, embedded chat streamed successfully, and the protected listener passed missing-token 401, wrong-audience 401, valid-token 200 from SentinelGate with strict schema checks, and tampered-token 401. No Application Gateway, SentinelGate, agent-infrastructure, DNS, or certificate change was made.
 
 Before another Gate 5 attempt, reproduce the tool-intent event sequence directly against immutable Hosted Agent version 6, confirm whether the broker is selected and invoked, capture the terminal SSE event contract, and add a deterministic pre-promotion probe that fails unless a tool result and final completion are both observed. FN-027 records the completed version 7 remediation and supersedes this action item; the version 6 failure remains historical evidence.
 
@@ -1007,9 +1007,9 @@ Direct replay against version 6 proved that the broker, RBAC, and live Applicati
 
 Version 7 adds mandatory evidence routing: current/live gateway configuration questions must call `get_gateway_config`, recent/live log questions must call `query_gate_logs`, scenario requests call the fixed simulation tool once, and sanitized pending evidence calls `decode_token` once. The SentinelApp client now obtains event type from both the SSE `event` field and JSON `type`, rejects disagreement, recognizes `response.failed`, `response.incomplete`, and `error`, and accepts `response.completed` only with status `completed`. It removes the failed owner/session mapping and permits one fresh-session retry only for a safe read-only request with no pending evidence, no emitted text, and a protocol exception. It never retries scenarios, token evidence, partial output, timeouts, or dependency failures, and it never silently falls back to Embedded within a Hosted request.
 
-Local validation passed 78 SentinelApp tests, 22 Hosted Agent tests, and both static suites. ACR run `dtb` built immutable image `sentinel-app:hosted-recovery-20260814-0155`; only SentinelApp was updated, initially in `Embedded`. A reviewed Terraform plan pinned `HOSTED_AGENT_VERSION` from 6 to 7 with `0 add, 1 change, 0 destroy`. Trusted health, Embedded SSE, and the strict protected-listener matrix passed.
+Local application, Hosted Agent, and static validation passed. Only SentinelApp was updated, initially in `Embedded`. A reviewed Terraform plan pinned the new immutable Hosted Agent version with only the expected in-place SentinelApp change. Trusted health, Embedded SSE, and the strict protected-listener matrix passed.
 
-A separately reviewed tester-only HostedShadow plan changed only SentinelApp mode and the single tester allowlist. Four read-only comparisons completed with `RetryClass=none`. Correlated traces proved `execute_tool get_gateway_config` plus ARM HTTP 200, `execute_tool query_gate_logs` plus Log Analytics HTTP 200, IQ knowledge retrieval plus MCP HTTP 200, and a same-session follow-up with no new session or conversation creation. The pre-reviewed rollback restored revision `ca-edgegrd--0000019` to `Embedded`, removed the allowlist, passed the strict `401, 401, 200 SentinelGate, 401` matrix and Embedded chat, and Terraform reported no changes. Application Gateway, SentinelGate, DNS, networking, certificates, and agent Terraform state did not change.
+A separately reviewed tester-only HostedShadow plan changed only SentinelApp mode and the tester allowlist. Read-only comparisons completed without retry or failure. Correlated traces proved `get_gateway_config` plus ARM HTTP 200, `query_gate_logs` plus Log Analytics HTTP 200, IQ knowledge retrieval plus MCP HTTP 200, and a same-session follow-up with no new session or conversation creation. The pre-reviewed rollback restored `Embedded`, removed the allowlist, passed the strict protected-listener matrix and Embedded chat, and Terraform reported no changes. Application Gateway, SentinelGate, DNS, networking, certificates, and agent Terraform state did not change.
 
 The v7 15-case evaluation produced 13 passes and two zero-output managed responses with response/trace IDs but no finish reason or token metrics. Both affected synthetic cases returned the required behavior on direct isolated replay and then passed a bounded two-case evaluation retry with task adherence and security rubric `2/2`, zero failures, and zero errors. Treat zero-output terminal anomalies as a preview availability risk covered by the narrow client retry, not as proof that HTTP 200 means a usable answer.
 
@@ -1019,13 +1019,13 @@ The v7 15-case evaluation produced 13 passes and two zero-output managed respons
 **Severity:** Informational  
 **Area:** Foundry Hosted Agent promotion
 
-The explicitly approved `infra/tfplan-gate5-v7` was rechecked before apply and contained only SentinelApp `AGENT_MODE` changing from `Embedded` to `Hosted`: `0` additions, one in-place change, and `0` destroys. Apply created revision `ca-edgegrd--0000020` on unchanged image `sentinel-app:hosted-recovery-20260814-0155`, pinned immutable Hosted Agent version 7, and left the shadow tester allowlist empty. A separate saved plan containing only the reverse mode change was created before test traffic.
+The explicitly approved activation plan was rechecked before apply and contained only SentinelApp `AGENT_MODE` changing from `Embedded` to `Hosted`: zero additions, one in-place change, and zero destroys. It pinned the reviewed immutable Hosted Agent version and left the shadow tester allowlist empty. A separate saved plan containing only the reverse mode change was created before test traffic.
 
-Trusted UI and vendored MSAL assets, delegated `/api/whoami`, strict BFF forwarding, both backend pools, and the final protected-listener matrix passed. Successful SentinelGate responses had the expected service/schema, tenant, canonical object ID, `gatewayValidated = true`, and `routingContextConsistent = true`. The four deterministic scenarios observed `401, 200, 401, 401` and retained the fixed `https://apiguard.mvps.gr/enter` target.
+Trusted UI and vendored MSAL assets, delegated `/api/whoami`, strict BFF forwarding, both backend pools, and the final protected-listener matrix passed. Successful SentinelGate responses had the expected service/schema, tenant, canonical object ID, `gatewayValidated = true`, and `routingContextConsistent = true`. The deterministic scenarios observed the expected deny/allow matrix and retained the configured fixed protected `/enter` target.
 
 Hosted validation exercised ordinary streaming, live gateway configuration, recent gateway logs, IQ grounding and exact repository citations, same-session continuity, explicit reset, fixed simulation, sanitized decode evidence, prompt-injection refusal, and all-zero handle refusal. Correlated spans proved `execute_tool get_gateway_config` plus ARM HTTP 200, `execute_tool query_gate_logs` plus Log Analytics HTTP 200, IQ retrieval, simulation broker HTTP 200, and decode broker HTTP 200. The invalid-handle and exfiltration prompts invoked no prohibited tools. Eleven user-facing checks created 12 successful version 7 agent invocations because one safe read-only IQ call encountered a zero-output protocol condition and used exactly the single allowed fresh-session retry. Simulations, token evidence, partial output, timeouts, and dependency errors were not retried.
 
-All 19 model calls and all correlated dependencies succeeded. Recorded usage was 53,775 input and 2,977 output tokens; invocation P50/P95 was approximately 5.15/17.64 seconds. A count-only scan of 537 rows found zero JWT-like values, bearer values, client-secret values, private keys, or storage keys. Terraform then reported no changes. Application Gateway, SentinelGate, DNS, networking, certificates, agent infrastructure, and agent Terraform state were unchanged. `infra/tfplan-gate5-v7-rollback` remains the reviewed Embedded rollback artifact. Live cross-user isolation still requires a second explicitly approved identity; local contract tests cover owner/session separation and cross-owner evidence denial.
+All correlated model calls and dependencies succeeded. A count-only scan found zero JWT-like values, bearer values, client-secret values, private keys, or storage keys. Terraform then reported no changes. Application Gateway, SentinelGate, DNS, networking, certificates, agent infrastructure, and agent Terraform state were unchanged. A reviewed Embedded rollback plan remains available. Live cross-user isolation requires separately approved test identities; local contract tests cover owner/session separation and cross-owner evidence denial.
 
 ## 31. Final operational takeaway
 

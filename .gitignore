@@ -115,8 +115,10 @@ deployment-evidence/
 **/.azure/
 **/.azd/
 
-# Local AI/session exports are historical evidence, not repository source
-/docs/history/original-claude-session.jsonl
+# Superseded design notes, deployment evidence, and session history are local-only
+/DESIGN.md
+/docs/AGENT-IMPLEMENTATION-PLAN.md
+/docs/history/
 
 # Local agent instructions and Azure Developer CLI manifests
 CLAUDE.md

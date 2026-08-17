@@ -20,6 +20,12 @@ The validated environment currently runs **Foundry Hosted Agent version 7** with
 
 The running solution keeps the protected application plane and the Hosted Agent knowledge plane in separate resource groups and permanently separate Terraform states. SentinelApp reaches immutable Hosted Agent version 7 through its managed Responses endpoint; the agent reaches approved documentation through the Foundry IQ toolbox and Azure AI Search. Application Gateway remains exclusively in the Stage 1 ownership boundary.
 
+### Agent evolution: Embedded to Hosted
+
+JWT Sentinel began with GateExplainer embedded in SentinelApp. That first implementation established the tool contracts, authorization rules, session ownership, deterministic simulations, and evidence/redaction behavior without adding a second runtime boundary.
+
+The Hosted Agent and Foundry IQ capability was then built independently in a separate resource group and Terraform state. SentinelApp gained a server-side `Embedded`/`HostedShadow`/`Hosted` router, while token-sensitive decoding and deterministic scenarios remained behind its authenticated app-only broker. Shadow validation compared the two implementations without exposing Hosted output to users. After tool parity, citations, session continuity, failure handling, telemetry redaction, latency, and rollback were validated, `Hosted` became the active mode. The original embedded implementation remains installed as the deliberate rollback path; switching modes changes SentinelApp configuration only and never requires an Application Gateway change or restart.
+
 ### Why two hostnames and two Container Apps?
 
 Browsers do not attach an `Authorization` header to ordinary page navigation. Putting the SPA behind the gateway's `Deny` rule would prevent the sign-in page from loading. JWT Sentinel therefore separates the UI and protected planes structurally:
@@ -148,7 +154,7 @@ A successful response must contain the expected SentinelGate schema and tenant, 
 
 ### 5. Add the Hosted Agent and Foundry IQ
 
-Stage 1 is independently usable with the embedded agent. The Hosted Agent, Search knowledge plane, monitoring, evaluations, and RBAC live permanently in a separate resource group and `agent-infra` state. Follow the [agent implementation plan](docs/AGENT-IMPLEMENTATION-PLAN.md) and [switch guide](docs/HOSTED-AGENT-SWITCH.md); do not merge the states or run `azd provision` over Terraform-owned resources.
+Stage 1 was independently usable with the embedded agent before the Hosted Agent was promoted. The Hosted Agent, Search knowledge plane, monitoring, evaluations, and RBAC live permanently in a separate resource group and `agent-infra` state. Follow the [migration design](docs/AGENT-MIGRATION.md) and [switch guide](docs/HOSTED-AGENT-SWITCH.md); do not merge the states or run `azd provision` over Terraform-owned resources.
 
 ## Demo storyline
 
@@ -233,9 +239,7 @@ Cleanup spans two independent Terraform states and deliberately protected resour
 - [Operator guide](docs/OPERATOR-GUIDE.md) — daily use, gateway and Agent checks, IQ grounding/telemetry validation, troubleshooting, and safe mode switching.
 - [Field notes](docs/FIELD-NOTES.md) — verified preview behavior and operational discoveries.
 - [Agent migration design](docs/AGENT-MIGRATION.md) — permanent isolation, RBAC, evaluation, rollback, and cost model.
-- [Agent implementation plan](docs/AGENT-IMPLEMENTATION-PLAN.md) — completed foundation and Gates 1–5.
 - [Hosted Agent switch guide](docs/HOSTED-AGENT-SWITCH.md) — Hosted/Embedded promotion and rollback procedure.
-- [DESIGN.md](DESIGN.md) — historical design context; implemented choices above take precedence where they differ.
 
 ---
 
