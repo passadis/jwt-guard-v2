@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose an improvement to JWT Sentinel
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the problem first. Changes to trust boundaries, Azure resources, preview services, identity, state ownership, or cost require explicit design review.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What reader, operator, contributor, or security-learning need is unmet?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the desired behavior without deployment-specific identifiers.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Expected impact
+      options:
+        - Documentation only
+        - Application or frontend
+        - Tests or developer tooling
+        - Terraform or Azure infrastructure
+        - Authentication, authorization, or trust boundary
+        - Hosted Agent, Foundry IQ, or evaluation
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Suggested validation
+      description: How should correctness, security, compatibility, and rollback be demonstrated?
+  - type: checkboxes
+    id: acknowledgement
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I searched existing issues and pull requests for this request.
+          required: true
+        - label: I have not included secrets or deployment-specific identifiers.
+          required: true

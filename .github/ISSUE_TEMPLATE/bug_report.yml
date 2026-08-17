@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a reproducible problem in JWT Sentinel
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem. Do not include tokens, secrets, IDs, state, certificates, private logs, or vulnerability details. Report security issues through SECURITY.md.
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - SentinelApp or SPA
+        - SentinelGate
+        - Application Gateway or networking
+        - Terraform or deployment scripts
+        - Hosted Agent
+        - Foundry IQ or Azure AI Search
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Provide a commit SHA, branch, or release without environment identifiers.
+      placeholder: uat at <short-commit>
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Use synthetic values and the smallest reproducible sequence.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Redact identifiers and sensitive output.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation performed
+      description: List relevant local checks and their results.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed secrets, tokens, tenant/subscription/application/principal IDs, state, certificates, and private logs.
+          required: true
+        - label: This report does not disclose a security vulnerability.
+          required: true
