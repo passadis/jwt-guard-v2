@@ -2,6 +2,7 @@
 **/.terraform/
 **/.terraform.d/
 **/.tfstate.d/
+**/terraform.tfstate.d/
 *.tfstate
 *.tfstate.*
 *.tfplan

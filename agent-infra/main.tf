@@ -5,8 +5,11 @@ resource "random_string" "suffix" {
 }
 
 locals {
-  foundry_account_name = "aif-${var.prefix}-${random_string.suffix.result}"
-  search_service_name  = "srch-${var.prefix}-${random_string.suffix.result}"
+  foundry_account_name               = "aif-${var.prefix}-${random_string.suffix.result}"
+  search_service_name                = "srch-${var.prefix}-${random_string.suffix.result}"
+  agent_log_analytics_workspace_name = "law-${var.prefix}"
+  agent_application_insights_name    = "appi-${var.prefix}"
+  agent_resource_group_budget_name   = "budget-${var.prefix}"
   common_tags = merge({
     application = "jwt-sentinel"
     component   = "hosted-agent"
@@ -90,7 +93,7 @@ resource "azurerm_cognitive_deployment" "model" {
 }
 
 resource "azurerm_log_analytics_workspace" "agent" {
-  name                         = "law-edgegrd-agent"
+  name                         = local.agent_log_analytics_workspace_name
   location                     = azurerm_resource_group.agent.location
   resource_group_name          = azurerm_resource_group.agent.name
   sku                          = "PerGB2018"
@@ -100,7 +103,7 @@ resource "azurerm_log_analytics_workspace" "agent" {
 }
 
 resource "azurerm_application_insights" "agent" {
-  name                = "appi-edgegrd-agent"
+  name                = local.agent_application_insights_name
   location            = azurerm_resource_group.agent.location
   resource_group_name = azurerm_resource_group.agent.name
   workspace_id        = azurerm_log_analytics_workspace.agent.id
@@ -113,7 +116,7 @@ resource "azurerm_application_insights" "agent" {
 }
 
 resource "azurerm_consumption_budget_resource_group" "agent" {
-  name              = "budget-edgegrd-agent"
+  name              = local.agent_resource_group_budget_name
   resource_group_id = azurerm_resource_group.agent.id
   amount            = var.budget_amount
   time_grain        = "Monthly"

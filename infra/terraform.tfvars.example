@@ -1,8 +1,12 @@
-# Required: a domain you control. UI = sentinel.<domain>, API = sentinel-api.<domain>
+# Required deployment identity and unique environment naming.
+subscription_id = "00000000-0000-0000-0000-000000000000"
+tenant_id       = "00000000-0000-0000-0000-000000000000"
+prefix          = "jwtsentdev"
+
+# Required: a domain you control. UI = sentinel.<domain>, API = sentinel-api.<domain>.
 domain = "contoso.com"
 
 # Optional overrides
-# prefix        = "jwtsent"
 # location      = "swedencentral"
 # ui_subdomain  = "sentinel"
 # api_subdomain = "sentinel-api"
@@ -10,6 +14,7 @@ domain = "contoso.com"
 # If the zone is hosted in Azure DNS, Terraform creates the A records for you:
 # dns_zone_name           = "contoso.com"
 # dns_zone_resource_group = "rg-dns"
+# dns_subscription_id     = "00000000-0000-0000-0000-000000000000"
 
 # Model (defaults: gpt-4o GlobalStandard, 50K TPM)
 # model_deployment_name = "gpt-4o"

@@ -191,3 +191,13 @@ Hosted evaluation pins the candidate to version 7 and uses the built-in task-adh
 - aggregate success is never treated as sufficient when a criterion has errors; rate-limited cases are retried with the rubric-only recipe and retained as supporting evidence;
 - explicit version 7 gateway-tool execution, log queries, IQ continuation, session continuity/reset, bounded evaluation closure, tool-focused shadow testing, and the final Gate 5 Hosted promotion have passed;
 - the Hosted Agent is the active mode and the embedded Agent remains the preserved rollback path.
+
+## ADR-016 — Pin deployment context and preserve Key Vault recovery
+
+**Status:** Accepted
+
+**Decision:** Require an explicit subscription ID, tenant ID, and unique prefix for every Stage 1 environment and pin them on the AzureRM, AzureAD, and AzAPI providers. Use an explicit DNS-subscription input for the narrowly scoped Azure DNS provider alias. Keep Terraform's `purge_soft_delete_on_destroy` behavior disabled.
+
+**Reason:** An operator's active CLI subscription is mutable context and must not silently redirect a plan. Cross-subscription DNS is intentional and should be visible as a separate ownership boundary. Automatic Key Vault purge would turn routine teardown into an irreversible certificate and secret deletion.
+
+**Consequences:** Rebuild tfvars cannot rely on inherited provider context or a default prefix. Each deployment uses a new local workspace or explicitly approved unique remote key. Destroy may leave a recoverable soft-deleted Key Vault name until Azure's retention window expires; reuse of that exact name is not assumed, and purge requires separate authorization.

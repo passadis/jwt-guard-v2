@@ -1,7 +1,31 @@
+variable "subscription_id" {
+  description = "Azure subscription that owns the isolated Stage 1 deployment."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.subscription_id))
+    error_message = "subscription_id must be a lowercase canonical GUID."
+  }
+}
+
+variable "tenant_id" {
+  description = "Microsoft Entra tenant for the isolated Stage 1 deployment."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", var.tenant_id))
+    error_message = "tenant_id must be a lowercase canonical GUID."
+  }
+}
+
 variable "prefix" {
   description = "Short prefix for resource names (lowercase, alphanumeric)."
   type        = string
-  default     = "jwtsent"
+
+  validation {
+    condition     = can(regex("^[a-z0-9]{4,20}$", var.prefix))
+    error_message = "prefix must contain 4-20 lowercase alphanumeric characters."
+  }
 }
 
 variable "location" {

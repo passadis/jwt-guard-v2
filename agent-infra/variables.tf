@@ -27,13 +27,16 @@ variable "location" {
 variable "resource_group_name" {
   description = "Dedicated lifecycle and cost boundary for the hosted agent."
   type        = string
-  default     = "rg-edgegrd-agent"
+
+  validation {
+    condition     = can(regex("^rg-[a-z0-9-]{2,80}$", var.resource_group_name))
+    error_message = "resource_group_name must be an explicit lowercase resource-group name beginning with rg-."
+  }
 }
 
 variable "prefix" {
   description = "Lowercase alphanumeric naming prefix."
   type        = string
-  default     = "edgegrdagent"
 
   validation {
     condition     = can(regex("^[a-z0-9]{4,20}$", var.prefix))
@@ -44,7 +47,31 @@ variable "prefix" {
 variable "foundry_project_name" {
   description = "Foundry project child-resource name."
   type        = string
-  default     = "proj-edgegrd-agent"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9._-]{2,63}$", var.foundry_project_name))
+    error_message = "foundry_project_name must be an explicit 3-64 character Foundry project name."
+  }
+}
+
+variable "stage1_resource_group_name" {
+  description = "Exact Stage 1 resource group used to validate cross-stack read-only scopes."
+  type        = string
+
+  validation {
+    condition     = can(regex("^rg-[a-z0-9-]{2,80}$", var.stage1_resource_group_name))
+    error_message = "stage1_resource_group_name must be an explicit lowercase resource-group name beginning with rg-."
+  }
+}
+
+variable "stage1_prefix" {
+  description = "Exact Stage 1 naming prefix used to validate cross-stack resource IDs."
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z0-9]{4,20}$", var.stage1_prefix))
+    error_message = "stage1_prefix must contain 4-20 lowercase alphanumeric characters."
+  }
 }
 
 variable "model_deployment_name" {
@@ -132,11 +159,13 @@ variable "application_gateway_resource_id" {
   type        = string
 
   validation {
-    condition = can(regex(
-      "^/subscriptions/[0-9a-f-]+/resourceGroups/rg-edgegrd/providers/Microsoft.Network/applicationGateways/agw-edgegrd$",
-      var.application_gateway_resource_id
-    ))
-    error_message = "application_gateway_resource_id must be the explicitly approved agw-edgegrd resource ID."
+    condition = var.application_gateway_resource_id == format(
+      "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/applicationGateways/agw-%s",
+      var.subscription_id,
+      var.stage1_resource_group_name,
+      var.stage1_prefix
+    )
+    error_message = "application_gateway_resource_id must exactly match the approved Stage 1 subscription, resource group, and prefix."
   }
 }
 
@@ -145,11 +174,13 @@ variable "log_analytics_workspace_resource_id" {
   type        = string
 
   validation {
-    condition = can(regex(
-      "^/subscriptions/[0-9a-f-]+/resourceGroups/rg-edgegrd/providers/Microsoft.OperationalInsights/workspaces/law-edgegrd$",
-      var.log_analytics_workspace_resource_id
-    ))
-    error_message = "log_analytics_workspace_resource_id must be the explicitly approved law-edgegrd resource ID."
+    condition = var.log_analytics_workspace_resource_id == format(
+      "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.OperationalInsights/workspaces/law-%s",
+      var.subscription_id,
+      var.stage1_resource_group_name,
+      var.stage1_prefix
+    )
+    error_message = "log_analytics_workspace_resource_id must exactly match the approved Stage 1 subscription, resource group, and prefix."
   }
 }
 
@@ -167,13 +198,16 @@ variable "budget_amount" {
 variable "budget_start_date" {
   description = "First day of the current month in RFC3339 form."
   type        = string
-  default     = "2026-08-01T00:00:00Z"
+
+  validation {
+    condition     = can(regex("^[0-9]{4}-(0[1-9]|1[0-2])-01T00:00:00Z$", var.budget_start_date))
+    error_message = "budget_start_date must be the first day of a month in UTC RFC3339 form."
+  }
 }
 
 variable "budget_contact_emails" {
   description = "Recipients for agent resource-group budget notifications."
   type        = list(string)
-  default     = ["passadis@outlook.com"]
 
   validation {
     condition     = length(var.budget_contact_emails) > 0 && alltrue([for email in var.budget_contact_emails : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", email))])

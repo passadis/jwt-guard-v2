@@ -509,8 +509,10 @@ Edit only the new file.
 Example structure:
 
 ```hcl
-prefix   = "<PREFIX>"
-location = "<LOCATION>"
+subscription_id = "<SUBSCRIPTION_ID>"
+tenant_id       = "<TENANT_ID>"
+prefix          = "<PREFIX>"
+location        = "<LOCATION>"
 
 domain        = "<DOMAIN>"
 ui_subdomain  = "<UI_SUBDOMAIN>"
@@ -518,11 +520,15 @@ api_subdomain = "<API_SUBDOMAIN>"
 
 dns_zone_name           = "<DNS_ZONE_NAME>"
 dns_zone_resource_group = "<DNS_ZONE_RESOURCE_GROUP>"
+dns_subscription_id     = "<DNS_SUBSCRIPTION_ID>"
 
 model_deployment_name = "<MODEL_DEPLOYMENT_NAME>"
 model_name            = "<MODEL_NAME>"
 model_version         = "<MODEL_VERSION>"
 model_capacity        = <MODEL_CAPACITY>
+
+# Stage 1 always starts on the verified rollback implementation.
+agent_mode = "Embedded"
 ```
 
 Do not place secrets in `terraform.tfvars`.
@@ -548,7 +554,16 @@ Local state is acceptable for the first clean rebuild when:
 - it is never committed;
 - and the operator understands that it contains sensitive values.
 
-A clean folder creates a new local state automatically.
+A clean folder creates a new local state automatically. Create or select a unique environment workspace and verify it is empty before planning:
+
+```powershell
+terraform -chdir=infra init -reconfigure
+terraform -chdir=infra workspace new <ENVIRONMENT>
+# If already created: terraform -chdir=infra workspace select <ENVIRONMENT>
+terraform -chdir=infra state list
+```
+
+Expected: `terraform workspace show` returns the intended environment. Before its first plan, `state list` either returns no resource addresses or reports `No state file was found`; both mean the new workspace has no managed resources. The optional Hosted Agent later uses a separately named workspace under `agent-infra`; never merge or cross-read these states.
 
 ### 17.2 Remote `azurerm` state
 
@@ -577,12 +592,6 @@ Initialize with:
 terraform -chdir=infra init `
   -reconfigure `
   -backend-config="<BACKEND_CONFIG_FILE>"
-```
-
-For local state:
-
-```powershell
-terraform -chdir=infra init -reconfigure
 ```
 
 ### State verification

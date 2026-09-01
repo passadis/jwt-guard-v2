@@ -12,7 +12,7 @@
 
 JWT Sentinel is an educational Azure deployment built around a real security boundary. A static MSAL SPA signs users in, Application Gateway validates tokens on a dedicated protected listener, and a minimal SentinelGate backend accepts only the gateway-injected canonical identity. The Gate Explainer reads the actual gateway configuration and access logs, decodes sanitized token evidence, and runs controlled allow/deny scenarios.
 
-The validated environment currently runs **Microsoft Foundry Hosted Agent version 7** with **Foundry IQ**. The in-process Microsoft Agent Framework 1.15 implementation remains available as the immediate, Terraform-controlled rollback path.
+The accepted baseline promoted **Microsoft Foundry Hosted Agent version 7** with **Foundry IQ** after independent parity validation. A clean rebuild starts with the in-process Microsoft Agent Framework 1.15 implementation and adds Hosted/IQ through the later gated workflow; Embedded remains the immediate, Terraform-controlled rollback path.
 
 ## Architecture
 
@@ -66,6 +66,8 @@ docs/                          architecture, ADRs, runbooks, field notes, and te
 
 Always use a new prefix, resource group, hostnames, three Entra applications, certificate name, and isolated Terraform state. Never copy state, `.terraform/`, populated tfvars, secrets, certificates, backend keys, or the original repository remote into a clean rebuild.
 
+The deployment subscription and tenant are explicit Terraform inputs and are also pinned on every Azure provider. A DNS zone may remain in a different subscription through the separately declared `dns_subscription_id`. Terraform destroy never purges a soft-deleted Key Vault automatically, preserving Azure's recovery window.
+
 For repository-only validation, initialize providers without configuring a deployment backend:
 
 ```powershell
@@ -84,9 +86,13 @@ The authoritative procedure and approval gates are in the [deployment runbook](d
 
 ```powershell
 Copy-Item infra/terraform.tfvars.example infra/terraform.tfvars
-# Edit terraform.tfvars with new-environment values.
+# Set explicit subscription_id, tenant_id, prefix, hostnames, DNS ownership,
+# and model values for this environment. Keep agent_mode = "Embedded".
 
 terraform -chdir=infra init
+terraform -chdir=infra workspace new <environment>
+# If it already exists: terraform -chdir=infra workspace select <environment>
+terraform -chdir=infra state list  # expect no resources or "No state file was found"
 terraform -chdir=infra validate
 terraform -chdir=infra plan -out=tfplan
 terraform -chdir=infra show -no-color tfplan
@@ -97,6 +103,8 @@ terraform -chdir=infra apply tfplan
 ```
 
 Terraform creates the VNet, NAT Gateway, public IPs, Key Vault bootstrap certificate, Log Analytics, three Entra applications, Microsoft Foundry/Azure AI model deployment, ACR, two Container Apps, DNS records when configured, and Application Gateway through AzAPI `Microsoft.Network/applicationGateways@2025-05-01`.
+
+Use a different workspace under `agent-infra` when the optional Hosted Agent foundation is built. The two roots, resource groups, and states remain permanently separate.
 
 ### 2. Build and deploy both application images
 
