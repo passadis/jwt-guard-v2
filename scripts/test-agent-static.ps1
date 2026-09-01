@@ -32,6 +32,14 @@ $evaluatorRegistrar = Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot "
 
 Assert-AgentCondition ($terraform -notmatch 'terraform_remote_state|backend\s+"azurerm"') "Agent Terraform must not read Stage 1 state or initialize a remote backend."
 Assert-AgentCondition ($terraform -notmatch 'azurerm_application_gateway|Microsoft\.Network/applicationGateways@|azurerm_container_app|azurerm_dns|azurerm_key_vault') "Agent Terraform must not own gateway, Container Apps, DNS, or Key Vault resources."
+Assert-AgentCondition ($terraform -notmatch 'law-edgegrd-agent|appi-edgegrd-agent|budget-edgegrd-agent') "Agent resource names must derive from the new environment prefix rather than the retired deployment."
+Assert-AgentCondition ($terraform -match 'law-\$\{var\.prefix\}' -and $terraform -match 'appi-\$\{var\.prefix\}' -and $terraform -match 'budget-\$\{var\.prefix\}') "Agent monitoring and budget names must derive from the explicit agent prefix."
+Assert-AgentCondition ($terraform -match 'var\.stage1_resource_group_name' -and $terraform -match 'var\.stage1_prefix' -and $terraform -match 'var\.subscription_id') "Cross-stack scopes must be validated against explicit Stage 1 environment inputs."
+$budgetVariableStart = $terraform.IndexOf('variable "budget_contact_emails"', [StringComparison]::Ordinal)
+$tagsVariableStart = $terraform.IndexOf('variable "tags"', [StringComparison]::Ordinal)
+Assert-AgentCondition ($budgetVariableStart -ge 0 -and $tagsVariableStart -gt $budgetVariableStart) "Agent budget contact and tags variables are missing or reordered unexpectedly."
+$budgetVariableBlock = $terraform.Substring($budgetVariableStart, $tagsVariableStart - $budgetVariableStart)
+Assert-AgentCondition ($budgetVariableBlock -notmatch 'default\s*=') "The budget contact list must be an explicit environment input and must not expose a personal default."
 Assert-AgentCondition ($terraform -match 'hosted_agent_principal_id\s*!=\s*null' -and $terraform -match 'count\s*=\s*local\.hosted_agent_rbac_enabled\s*\?\s*1\s*:\s*0') "Existing-stack role assignments must stay disabled until a real hosted-agent identity is supplied."
 Assert-AgentCondition ($terraform -match 'knowledgeRetrieval\s*=\s*"free"' -and $terraform -match 'semantic_search_sku\s*=\s*"free"') "Search paid retrieval and semantic ranking must remain opt-in."
 Assert-AgentCondition ($terraform -match 'local_authentication_enabled\s*=\s*false') "New services must use Entra/RBAC rather than local keys."

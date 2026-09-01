@@ -2,7 +2,7 @@
 
 ## Scope
 
-This document describes the implemented topology without deployment-specific identifiers. Stage 1 uses two Azure Container Apps behind one Azure Application Gateway. SentinelApp routes GateExplainer requests to an immutable Foundry Hosted Agent version through `AGENT_MODE=Hosted`; the in-process Microsoft Agent Framework implementation remains intact as the immediate rollback path.
+This document describes the accepted topology without deployment-specific identifiers. Stage 1 uses two Azure Container Apps behind one Azure Application Gateway and starts in `AGENT_MODE=Embedded`. After the independent Hosted/IQ gates pass, SentinelApp can route GateExplainer requests to an immutable Foundry Hosted Agent version through `AGENT_MODE=Hosted`; the in-process Microsoft Agent Framework implementation remains intact as the immediate rollback path.
 
 Foundry Agent and IQ infrastructure stays permanently isolated from Stage 1 infrastructure in its own resource group and Terraform state. The Hosted client fails closed on explicit failed or incomplete stream events, with one fresh-session retry limited to safe, read-only, zero-output protocol failures. Promoting or rolling back the Agent changes only SentinelApp configuration and does not modify or restart Application Gateway.
 
@@ -126,7 +126,9 @@ Application Gateway is a single `azapi_resource` using API `2025-05-01`; this pr
 
 Terraform owns initial Container App images but ignores later image drift because `deploy-app.ps1` owns deployed image revisions. Certificate versions after bootstrap are similarly owned by `issue-cert.ps1`.
 
-The repository currently uses fresh local state by default. A remote backend may be introduced only with an explicitly approved, unique key. `.terraform.lock.hcl` is committed; `.terraform/`, state, tfvars, plans, backend configuration, and generated sensitive material are ignored.
+The repository uses isolated local workspaces by default: one workspace under `infra` for Stage 1 and a separately named workspace under `agent-infra` for the optional Hosted Agent foundation. The roots, states, and resource groups remain permanently separate. A remote backend may be introduced only with an explicitly approved, unique key. `.terraform.lock.hcl` is committed; `.terraform/`, state, tfvars, plans, backend configuration, and generated sensitive material are ignored.
+
+The deployment subscription and tenant are required inputs and are pinned explicitly on the AzureRM, AzureAD, and AzAPI providers. A separate AzureRM alias owns only cross-subscription Azure DNS records when `dns_subscription_id` is configured. Terraform does not automatically purge Key Vault soft-delete data during destroy, so an operator retains the normal recovery window and any purge remains a separately authorized action.
 
 ## Stage boundary
 

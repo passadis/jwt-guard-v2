@@ -22,9 +22,12 @@ terraform {
 }
 
 provider "azurerm" {
+  subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
+
   features {
     key_vault {
-      purge_soft_delete_on_destroy = true
+      purge_soft_delete_on_destroy = false
     }
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -35,10 +38,16 @@ provider "azurerm" {
 # DNS zone lives in another subscription (same tenant).
 provider "azurerm" {
   alias           = "dns"
-  subscription_id = var.dns_subscription_id
+  subscription_id = coalesce(var.dns_subscription_id, var.subscription_id)
+  tenant_id       = var.tenant_id
   features {}
 }
 
-provider "azuread" {}
+provider "azuread" {
+  tenant_id = var.tenant_id
+}
 
-provider "azapi" {}
+provider "azapi" {
+  subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
+}

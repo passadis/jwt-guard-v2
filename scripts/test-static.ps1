@@ -13,6 +13,7 @@ function Assert-Text {
 $appGw = Get-Content -Raw (Join-Path $repositoryRoot "infra\appgw.tf")
 $app = Get-Content -Raw (Join-Path $repositoryRoot "infra\app.tf")
 $variables = Get-Content -Raw (Join-Path $repositoryRoot "infra\variables.tf")
+$providers = Get-Content -Raw (Join-Path $repositoryRoot "infra\providers.tf")
 $agent = Get-Content -Raw (Join-Path $repositoryRoot "src\SentinelApp\Services\AgentService.cs")
 $gateProgram = Get-Content -Raw (Join-Path $repositoryRoot "src\SentinelGate\Program.cs")
 $gateForwarder = Get-Content -Raw (Join-Path $repositoryRoot "src\SentinelApp\Services\GateForwarder.cs")
@@ -38,6 +39,14 @@ Assert-Text ($generationReferences -eq 1) "gateway_config_generation must affect
 Assert-Text ($appGw -match 'jwt-sentinel-config-generation\s*=\s*tostring\(var\.gateway_config_generation\)') "The gateway generation must update the AzAPI resource tag."
 Assert-Text ($appGw -match 'lifecycle\s*\{[\s\S]*?prevent_destroy\s*=\s*true[\s\S]*?\}') "Application Gateway replacement/destruction must be blocked during normal planning."
 Assert-Text ($appGw -notmatch 'replace_triggered_by|replace_triggers') "The configuration generation must not contain replacement triggers."
+Assert-Text ($providers -match 'provider\s+"azurerm"\s*\{[\s\S]*?subscription_id\s*=\s*var\.subscription_id[\s\S]*?tenant_id\s*=\s*var\.tenant_id') "The Stage 1 AzureRM provider must pin the approved subscription and tenant explicitly."
+Assert-Text ($providers -match 'purge_soft_delete_on_destroy\s*=\s*false') "Key Vault soft-delete recovery must remain enabled during Terraform destroy."
+Assert-Text ($providers -notmatch 'purge_soft_delete_on_destroy\s*=\s*true') "Terraform must never purge a soft-deleted Key Vault automatically."
+$prefixVariableStart = $variables.IndexOf('variable "prefix"', [StringComparison]::Ordinal)
+$locationVariableStart = $variables.IndexOf('variable "location"', [StringComparison]::Ordinal)
+Assert-Text ($prefixVariableStart -ge 0 -and $locationVariableStart -gt $prefixVariableStart) "Stage 1 prefix and location variables are missing or reordered unexpectedly."
+$prefixVariableBlock = $variables.Substring($prefixVariableStart, $locationVariableStart - $prefixVariableStart)
+Assert-Text ($prefixVariableBlock -match 'validation' -and $prefixVariableBlock -notmatch 'default\s*=') "Stage 1 prefix must be an explicit validated environment input."
 Assert-Text ($gateProgram -match 'x-original-host') "SentinelGate must inspect original-host routing context."
 $identityCheck = $gateProgram.IndexOf('request.Headers["x-msft-entra-identity"]', [StringComparison]::Ordinal)
 $routingContextCheck = $gateProgram.IndexOf('request.Headers["x-original-host"]', [StringComparison]::Ordinal)
@@ -103,14 +112,16 @@ $forbidden = @("az", "network", "application-gateway", "update") -join " "
 $executableScripts = Get-ChildItem -Path (Join-Path $PSScriptRoot "*") -File -Include *.ps1,*.psm1
 foreach ($script in $executableScripts) {
   $content = Get-Content -Raw $script.FullName
-  Assert-Text (-not $content.Contains($forbidden, [StringComparison]::OrdinalIgnoreCase)) "Forbidden gateway CLI command found in $($script.Name)."
+  Assert-Text ($content.IndexOf($forbidden, [StringComparison]::OrdinalIgnoreCase) -lt 0) "Forbidden gateway CLI command found in $($script.Name)."
 }
 
 # This repository has now been deployed with two explicitly approved isolated
 # local states. They are sensitive operational data, not commit-ready source.
 $allowedLocalStateDirectories = @(
   [IO.Path]::GetFullPath((Join-Path $repositoryRoot "infra")),
-  [IO.Path]::GetFullPath((Join-Path $repositoryRoot "agent-infra"))
+  [IO.Path]::GetFullPath((Join-Path $repositoryRoot "agent-infra")),
+  [IO.Path]::GetFullPath((Join-Path $repositoryRoot "infra\terraform.tfstate.d\azuredev")),
+  [IO.Path]::GetFullPath((Join-Path $repositoryRoot "agent-infra\terraform.tfstate.d\azuredev"))
 )
 $unexpectedPlans = Get-ChildItem -Force -Recurse -File $repositoryRoot |
   Where-Object {
@@ -127,9 +138,12 @@ Assert-Text (@($unexpectedState).Count -eq 0) "Terraform state exists outside th
 $unexpectedTfvars = Get-ChildItem -Force -Recurse -File $repositoryRoot |
   Where-Object {
     $_.Name -eq 'terraform.tfvars' -and
-    [IO.Path]::GetFullPath($_.FullName) -ne [IO.Path]::GetFullPath((Join-Path $repositoryRoot "infra\terraform.tfvars"))
+    [IO.Path]::GetFullPath($_.FullName) -notin @(
+      [IO.Path]::GetFullPath((Join-Path $repositoryRoot "infra\terraform.tfvars")),
+      [IO.Path]::GetFullPath((Join-Path $repositoryRoot "agent-infra\terraform.tfvars"))
+    )
   }
-Assert-Text (@($unexpectedTfvars).Count -eq 0) "A populated tfvars file exists outside the approved existing-stack input path."
+Assert-Text (@($unexpectedTfvars).Count -eq 0) "A populated tfvars file exists outside the two approved isolated Terraform roots."
 
 $expectedTerraformMetadata = @(
   [IO.Path]::GetFullPath((Join-Path $repositoryRoot "infra\.terraform")),
