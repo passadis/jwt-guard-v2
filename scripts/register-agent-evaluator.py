@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Register the initial JWT Sentinel rubric evaluator in Microsoft Foundry."""
+"""Register one immutable JWT Sentinel rubric evaluator version in Foundry."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -14,17 +15,30 @@ from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import AzureCliCredential
 
 
+def positive_version(value: str) -> int:
+    version = int(value)
+    if version < 1:
+        raise argparse.ArgumentTypeError("version must be a positive integer")
+    return version
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Validate a rubric locally and, with --apply, create its initial "
-            "custom-evaluator version in a Foundry project. Existing evaluators "
-            "are never overwritten by this script."
+            "Validate a rubric locally and, with --apply, create exactly the "
+            "next custom-evaluator version in a Foundry project. Existing "
+            "versions are never updated or overwritten by this script."
         )
     )
     parser.add_argument("--project-endpoint", required=True)
     parser.add_argument("--name", required=True)
     parser.add_argument("--rubric", required=True, type=Path)
+    parser.add_argument(
+        "--expected-version",
+        required=True,
+        type=positive_version,
+        help="Required auto-incremented version that the service must create.",
+    )
     parser.add_argument("--display-name", default="JWT Sentinel Security Parity")
     parser.add_argument(
         "--description",
@@ -37,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--apply",
         action="store_true",
-        help="Create the initial evaluator version. Without this flag, validate only.",
+        help="Create the expected next evaluator version. Without this flag, validate only.",
     )
     return parser.parse_args()
 
@@ -76,10 +90,19 @@ def main() -> int:
     if not 0.0 <= args.pass_threshold <= 1.0:
         raise ValueError("--pass-threshold must be between 0.0 and 1.0.")
 
-    dimensions = load_dimensions(args.rubric.resolve())
-    print(f"Validated {len(dimensions)} rubric dimensions for {args.name}.")
+    rubric_path = args.rubric.resolve()
+    dimensions = load_dimensions(rubric_path)
+    rubric_sha256 = hashlib.sha256(rubric_path.read_bytes()).hexdigest()
+    expected_version = str(args.expected_version)
+    print(
+        f"Validated {len(dimensions)} rubric dimensions for {args.name} "
+        f"target version {expected_version} (SHA-256 {rubric_sha256})."
+    )
     if not args.apply:
-        print("Dry run only; no Foundry evaluator was created.")
+        print(
+            "Dry run only; no Foundry evaluator was created. Apply will require "
+            f"version {expected_version} to be the service's next version."
+        )
         return 0
 
     credential = AzureCliCredential()
@@ -97,19 +120,52 @@ def main() -> int:
             )
         except ResourceNotFoundError:
             existing = []
-        if existing:
-            versions = ", ".join(sorted(item.version for item in existing))
-            print(f"Evaluator {args.name} already exists with version(s): {versions}.")
-            print("No changes were made; use azd ai agent eval update for a new version.")
+        existing_by_version = {str(item.version): item for item in existing}
+        if expected_version in existing_by_version:
+            existing_metadata = getattr(
+                existing_by_version[expected_version], "metadata", None
+            ) or {}
+            existing_hash = existing_metadata.get("rubric_sha256")
+            if existing_hash != rubric_sha256:
+                raise RuntimeError(
+                    f"Evaluator {args.name} version {expected_version} already exists "
+                    "with different or missing rubric provenance. Refusing to update "
+                    "or overwrite the immutable version."
+                )
+            print(
+                f"Evaluator {args.name} version {expected_version} already exists "
+                "with the reviewed rubric hash. No changes were made."
+            )
             return 0
+
+        try:
+            numeric_versions = sorted(int(version) for version in existing_by_version)
+        except ValueError as exc:
+            raise RuntimeError(
+                "Evaluator has a nonnumeric version; refusing unsafe auto-increment."
+            ) from exc
+
+        next_version = str(numeric_versions[-1] + 1 if numeric_versions else 1)
+        if next_version != expected_version:
+            versions = ", ".join(str(version) for version in numeric_versions) or "none"
+            raise RuntimeError(
+                f"Evaluator {args.name} has version(s) {versions}; the service's next "
+                f"version would be {next_version}, not required version "
+                f"{expected_version}. No changes were made."
+            )
 
         evaluator = project_client.beta.evaluators.create_version(
             name=args.name,
             evaluator_version={
                 "name": args.name,
+                "evaluator_type": "custom",
                 "categories": [EvaluatorCategory.QUALITY],
                 "display_name": args.display_name,
                 "description": args.description,
+                "metadata": {
+                    "rubric_sha256": rubric_sha256,
+                    "schema_version": expected_version,
+                },
                 "definition": {
                     "type": EvaluatorDefinitionType.RUBRIC,
                     "dimensions": dimensions,
@@ -118,6 +174,11 @@ def main() -> int:
             },
         )
 
+    if str(evaluator.version) != expected_version:
+        raise RuntimeError(
+            f"Foundry created unexpected evaluator version {evaluator.version}; "
+            f"required {expected_version}. Stop before using this evaluator."
+        )
     print(f"Created evaluator {evaluator.name} version {evaluator.version}.")
     return 0
 

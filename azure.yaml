@@ -7,7 +7,7 @@ services:
         host: azure.ai.agent
         language: csharp
         uses:
-            - proj-edgegrd-agent
+            - proj-edgegrddev-agent
         codeConfiguration:
             dependencyResolution: remote_build
             entryPoint: SentinelHostedAgent.dll
@@ -38,8 +38,8 @@ services:
         protocols:
             - protocol: responses
               version: 2.0.0
-    proj-edgegrd-agent:
+    proj-edgegrddev-agent:
         host: azure.ai.project
-        endpoint: https://aif-edgegrdagent-havcc.services.ai.azure.com/api/projects/proj-edgegrd-agent
+        endpoint: https://aif-edgegrddevagent-wq7hd.services.ai.azure.com/api/projects/proj-edgegrddev-agent
 infra:
     provider: microsoft.foundry

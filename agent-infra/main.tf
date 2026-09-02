@@ -59,6 +59,11 @@ resource "azapi_resource" "foundry_project" {
   parent_id = azapi_resource.foundry_account.id
   location  = azurerm_resource_group.agent.location
 
+  # Keep account child mutations sequential. Without this dependency, project
+  # creation can race the model or account-level tracing connection and Azure
+  # returns RequestConflict while another operation is still in progress.
+  depends_on = [azapi_resource.foundry_account_app_insights_connection]
+
   identity {
     type = "SystemAssigned"
   }

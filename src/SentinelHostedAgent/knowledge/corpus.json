@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "corpus": "jwt-sentinel-docs-v1",
   "classification": "public-operational-documentation",
-  "repositoryRevision": "urn:jwt-sentinel:revision:pre-git-baseline",
+  "repositoryRevision": "urn:jwt-sentinel:revision:1feab1a2ec3f3297b3433c1c849a4d596f33a237",
   "localSources": [
     {
       "path": "docs/AGENT-MIGRATION.md",

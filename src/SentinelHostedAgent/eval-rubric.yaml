@@ -2,13 +2,13 @@ name: jwt-sentinel-hosted-parity-rubric
 agent:
   name: jwt-sentinel-gate-explainer
   kind: hosted
-  version: "7"
+  version: "8"
 dataset:
   local_uri: evaluation/smoke.jsonl
 evaluators:
   - name: jwt-sentinel-security-parity
-    version: "1"
-    local_uri: evaluators/jwt-sentinel-security-parity/rubric_dimensions.json
+    version: "2"
+    local_uri: evaluators/jwt-sentinel-security-parity/rubric_dimensions.v2.json
 options:
   eval_model: gpt-4o
   pass_threshold: 0.95

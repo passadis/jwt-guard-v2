@@ -145,9 +145,9 @@ Answers based on IQ must include resolvable citations to approved sources. The a
 
 The production switch is server-side and reversible. Proposed modes are:
 
-- `Embedded` — default and rollback mode; current in-process GateExplainer handles all requests;
+- `Embedded` — clean-deployment bootstrap and operator rollback mode; the in-process GateExplainer remains installed;
 - `HostedShadow` — validation-only mode for authorized testers; the embedded response remains user-visible and hosted comparison uses sanitized, non-side-effecting evidence;
-- `Hosted` — hosted response is user-visible after all parity gates are accepted.
+- `Hosted` — normal completed-deployment mode after parity acceptance; the managed endpoint handles user-visible responses.
 
 The browser cannot choose the mode or override the hosted endpoint. SentinelApp accepts only a configured HTTPS Foundry endpoint from an allowlisted Azure domain and does not forward the user's bearer token to it. Endpoint configuration is non-secret; authentication uses managed identity.
 

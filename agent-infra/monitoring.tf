@@ -15,6 +15,10 @@ resource "azapi_resource" "foundry_account_app_insights_connection" {
   name      = "${azapi_resource.foundry_account.name}-appinsights"
   parent_id = azapi_resource.foundry_account.id
 
+  # Azure serializes control-plane child writes on a Foundry account. Create
+  # the model first so this connection cannot race its deployment.
+  depends_on = [azurerm_cognitive_deployment.model]
+
   body = {
     properties = {
       category      = "AppInsights"

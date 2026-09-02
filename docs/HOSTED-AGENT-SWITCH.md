@@ -56,14 +56,16 @@ The current variables are:
 
 Use environment-specific values only in ignored `terraform.tfvars`, another approved ignored variable file, or a protected CI variable store. Do not write real tenant, subscription, principal, endpoint, hostname, or tester identifiers into public documentation.
 
-Example shape:
+Completed-deployment shape:
 
 ```hcl
-agent_mode                       = "Embedded"
+agent_mode                       = "Hosted"
 hosted_agent_responses_endpoint = "https://<foundry-account>.services.ai.azure.com/api/projects/<project>/agents/<agent>/endpoint/protocols/openai/responses?api-version=v1"
 hosted_agent_version             = <positive-version>
 hosted_shadow_tester_object_ids  = []
 ```
+
+Stage 1 intentionally bootstraps in `Embedded` while the isolated Hosted endpoint and runtime principal do not yet exist. After Hosted/IQ validation, the reviewed SentinelApp-only promotion makes `Hosted` the normal mode. Set only `agent_mode = "Embedded"` for rollback while retaining the pinned Hosted endpoint and version for a reversible return.
 
 Authentication uses SentinelApp's managed identity. Never add Hosted access tokens, model/Search keys, connection strings, browser tokens, or daemon secrets to these variables.
 

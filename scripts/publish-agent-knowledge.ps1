@@ -407,14 +407,14 @@ function Write-PublicationEvidence {
     if (-not $fullPath.StartsWith($allowedRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "EvidencePath must stay under src/SentinelHostedAgent/.foundry/results/."
     }
-    $sources = @($Records | Group-Object url | ForEach-Object {
+    $sources = @($Records | Group-Object { [string]$_['url'] } | ForEach-Object {
         $first = $_.Group[0]
         [ordered]@{
-            url = $first.url
-            title = $first.title
-            sourceKind = $first.sourceKind
-            revision = $first.revision
-            sha256 = $first.sha256
+            url = $first['url']
+            title = $first['title']
+            sourceKind = $first['sourceKind']
+            revision = $first['revision']
+            sha256 = $first['sha256']
             chunks = $_.Count
         }
     })

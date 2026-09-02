@@ -5,7 +5,7 @@
 **Applies to:** Clean JWT Sentinel repository and a new, isolated Azure environment  
 **Primary references:** `README.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs/FIELD-NOTES.md`
 **Shell examples:** PowerShell 7 unless marked Bash  
-**Deployment model:** Terraform infrastructure followed by ACR build/Container App update and trusted-certificate issuance
+**Deployment model:** Terraform Stage 1 followed by application deployment and trusted-certificate issuance; Hosted Agent and Foundry IQ then follow the separately isolated completion path
 
 ---
 
@@ -29,6 +29,8 @@ It covers:
 12. Troubleshooting, evidence capture, and teardown.
 
 This runbook does not grant authorization to execute destructive or environment-changing actions. The pause gates defined below still require explicit approval.
+
+This document is the Stage 1 deployment runbook. To finish with Hosted Agent as the normal mode and Foundry IQ as the cited knowledge source, continue with [Hosted Agent and Foundry IQ deployment path](HOSTED-AGENT-IQ-QUICKSTART.md). That guide records the previously implicit two-pass order: foundation, initial agent identity, scoped RBAC, knowledge publication, toolbox creation, immutable redeployment, IQ invocation proof, and the final SentinelApp `Hosted` configuration change.
 
 ### Current v2 topology
 

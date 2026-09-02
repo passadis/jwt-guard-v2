@@ -128,7 +128,7 @@ This log records the accepted decisions that govern the current implementation. 
 
 ## ADR-013 — Permanently isolate the Hosted Agent migration and preserve embedded rollback
 
-**Status:** Accepted; Hosted v7 promoted after Gate 5 parity validation, with Embedded rollback preserved
+**Status:** Accepted; Hosted is the target operating mode, with Embedded rollback preserved
 
 **Decision:** Build the Foundry Hosted Agent, Foundry IQ, Search, knowledge storage, observability, budgets, and agent identities in a separate resource group and Terraform state that will never be merged into the Stage 1 `infra/` state. Integrate the managed hosted endpoint only through explicit SentinelApp configuration and a reversible `Embedded`/`Hosted` server-side switch. Preserve the embedded Agent Framework implementation until hosted parity has been validated and accepted.
 
@@ -178,7 +178,9 @@ The first index is semantic text search without vectors. The first knowledge bas
 
 **Decision:** Terraform owns shared account- and project-scoped Foundry connections to the agent-owned Application Insights component. The Application Insights connection string is supplied only through the AzAPI resource's write-only `sensitive_body`, remains protected in isolated Terraform state, and is never emitted as an output. The Foundry project identity receives Log Analytics Reader and Privileged Monitoring Data Reader only on that Application Insights component.
 
-Hosted evaluation pins the candidate to version 7 and uses the built-in task-adherence and groundedness evaluators plus version 1 of the registered `jwt-sentinel-security-parity` rubric. The custom rubric evaluates trust-boundary fidelity, evidence and tool discipline, grounding and corpus boundaries, confidentiality and session isolation, and communication quality. A rubric-only recipe is retained for bounded retries when the shared model deployment reaches its token-per-minute limit.
+Hosted evaluation pins each candidate to an immutable deployed version and uses the built-in task-adherence and groundedness evaluators plus the registered `jwt-sentinel-security-parity` rubric. The custom rubric evaluates trust-boundary fidelity, evidence and tool discipline, grounding and corpus boundaries, confidentiality and session isolation, and communication quality. A rubric-only recipe is retained for bounded retries when the shared model deployment reaches its token-per-minute limit.
+
+**AzureDev corrective amendment:** The earlier evaluator v1 and version 7 evidence remain immutable. AzureDev evaluator v2 makes all five reviewed dimensions applicable, preventing an indirect privilege-escalation case from being scored only on writing style; its registration records rubric SHA-256 provenance and refuses updates or unexpected auto-increments. Hosted Agent v3 was rejected when its direct replay check refused the caller token but still offered the controlled `valid` scenario. The prepared v4 candidate therefore enforces replay refusal in a deterministic pre-model Agent Framework decorator for both normal and streaming paths. A seven-case custom-only v4 regression gate must pass without errors before the full 15-case suite runs, reducing quota pressure without removing hard cases or weakening the `0.95` full-suite threshold.
 
 **Reason:** Server-side Foundry tracing requires an explicit monitoring connection, while the connection credential must not become application configuration or a normal Terraform output. The built-in tool-call-accuracy evaluator cannot evaluate the current Hosted Agent result shape because tool definitions are absent, so continuing to report it would produce errors rather than meaningful security evidence. A versioned repository rubric makes the actual JWT Sentinel boundaries reviewable and reproducible.
 
@@ -189,8 +191,8 @@ Hosted evaluation pins the candidate to version 7 and uses the built-in task-adh
 - Application Insights local ingestion authentication remains enabled for the platform's connection-string exporter; Entra-only ingestion requires a separately reviewed exporter change;
 - evaluator-set changes require a fresh evaluation group rather than reuse of an immutable group, and local `LAST_EVAL_ID` must be cleared before such a run;
 - aggregate success is never treated as sufficient when a criterion has errors; rate-limited cases are retried with the rubric-only recipe and retained as supporting evidence;
-- explicit version 7 gateway-tool execution, log queries, IQ continuation, session continuity/reset, bounded evaluation closure, tool-focused shadow testing, and the final Gate 5 Hosted promotion have passed;
-- the Hosted Agent is the active mode and the embedded Agent remains the preserved rollback path.
+- each environment records its own immutable version, gateway-tool execution, log queries, IQ continuation, session continuity/reset, evaluation evidence, and final Hosted promotion;
+- the Hosted Agent is the target mode and the embedded Agent remains the preserved rollback path.
 
 ## ADR-016 — Pin deployment context and preserve Key Vault recovery
 
@@ -201,3 +203,30 @@ Hosted evaluation pins the candidate to version 7 and uses the built-in task-adh
 **Reason:** An operator's active CLI subscription is mutable context and must not silently redirect a plan. Cross-subscription DNS is intentional and should be visible as a separate ownership boundary. Automatic Key Vault purge would turn routine teardown into an irreversible certificate and secret deletion.
 
 **Consequences:** Rebuild tfvars cannot rely on inherited provider context or a default prefix. Each deployment uses a new local workspace or explicitly approved unique remote key. Destroy may leave a recoverable soft-deleted Key Vault name until Azure's retention window expires; reuse of that exact name is not assumed, and purge requires separate authorization.
+
+## ADR-017 — Use a Hosted-first operating model and require proof of IQ invocation
+
+**Status:** Accepted
+
+**Decision:** Treat `Hosted` as the normal completed-deployment mode and `Embedded` as the operator-controlled rollback. Keep `HostedShadow` available for optional advanced parity observation, but do not require it for every demonstration rebuild. A fresh deployment may bootstrap temporarily in `Embedded` only because the Hosted endpoint and runtime principal are created later in the isolated agent workflow.
+
+The Hosted runtime consumes the named Foundry toolbox through the Agent Framework hosting boundary. The Search index is not attached directly to the Agent: the connection is Hosted Agent -> toolbox -> RemoteTool connection -> knowledge-base MCP endpoint -> knowledge source -> index.
+
+Three states must be verified independently:
+
+1. the toolbox is configured with the expected endpoint and identity;
+2. the Hosted runtime enumerates the expected IQ retrieval tool;
+3. a grounding-required response actually calls that tool and cites only its returned sources.
+
+Toolbox attachment or a factually correct model answer is not proof that IQ was used. Prompt instructions can encourage tool selection but cannot make a model decision deterministic. The Hosted Agent therefore applies a deterministic policy for architecture, trust-boundary, backend Host, and TLS/SNI explanations: directly invoke the exact enumerated `jwt-sentinel-iq___knowledge_base_retrieve` function with the bounded question, verify topic-specific facts in its returned evidence, and render a bounded answer with exact returned citations. Live gateway, log, token, and simulation requests keep their dedicated model-tool routes. Direct invocation is intentional because the hosted model-tool loop performs a post-tool call, while a minimal Foundry IQ retrieval can consume most of a 10K TPM deployment window and make that continuation fail on rate limiting.
+
+**Reason:** The previous documentation described the architecture and high-assurance migration gates but did not place the full two-pass bootstrapping sequence in one deployer-facing procedure. It also risked conflating an attached toolbox with an invoked knowledge tool. The concise path removes unnecessary ceremony for normal rebuilds without weakening identity, state, token, or gateway boundaries.
+
+**Consequences:**
+
+- the new [Hosted Agent and Foundry IQ deployment path](HOSTED-AGENT-IQ-QUICKSTART.md) is the authoritative continuation after the Stage 1 runbook;
+- the first agent deployment may have no toolbox because it exists to establish the immutable endpoint and runtime identity;
+- RBAC, knowledge publication, toolbox creation, and a second immutable deployment follow in that order;
+- the final SentinelApp change selects `Hosted` and must not modify Application Gateway or either Terraform ownership boundary;
+- full shadow observation and remote evaluation remain recommended assurance activities, not blockers for a normal demonstration deployment;
+- Embedded remains installed and tested until a later ADR explicitly removes the rollback path.

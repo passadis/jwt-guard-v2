@@ -7,6 +7,7 @@ using Microsoft.Agents.AI.Foundry.Hosting;
 using Microsoft.Extensions.AI;
 using SentinelHostedAgent;
 using SentinelHostedAgent.Configuration;
+using SentinelHostedAgent.Security;
 using SentinelHostedAgent.Tools;
 
 Env.TraversePath().Load();
@@ -28,12 +29,14 @@ var tools = new List<AITool>
     AIFunctionFactory.Create(brokerTool.DecodeAsync, "decode_token"),
     AIFunctionFactory.Create(brokerTool.SimulateAsync, "simulate_gate_request"),
 };
-AIAgent agent = projectClient.AsAIAgent(
+AIAgent modelAgent = projectClient.AsAIAgent(
     model: options.ModelDeployment,
     instructions: GateExplainerInstructions.Text,
     name: "jwt-sentinel-gate-explainer",
     description: "Evidence-based explainer for Azure Application Gateway JWT Validation.",
     tools: [.. tools]);
+AIAgent agent = new CallerTokenReplayGuardAgent(
+    new KnowledgeGroundingAgent(modelAgent));
 
 var builder = AgentHost.CreateBuilder(args);
 builder.Services.AddFoundryResponses(agent);

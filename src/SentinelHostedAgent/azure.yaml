@@ -1,14 +1,13 @@
 name: jwt-sentinel-hosted-agent
 services:
-  ai-project:
-    host: azure.ai.project
   jwt-sentinel-gate-explainer:
     project: .
     host: azure.ai.agent
     language: csharp
     uses:
-      - ai-project
+      - proj-edgegrddev-agent
     codeConfiguration:
+      dependencyResolution: remote_build
       runtime: dotnet_10
       entryPoint: SentinelHostedAgent.dll
     environmentVariables:
@@ -27,3 +26,10 @@ services:
     protocols:
       - protocol: responses
         version: 2.0.0
+    kind: hosted
+    name: jwt-sentinel-gate-explainer
+  proj-edgegrddev-agent:
+    host: azure.ai.project
+    endpoint: https://aif-edgegrddevagent-wq7hd.services.ai.azure.com/api/projects/proj-edgegrddev-agent
+infra:
+  provider: microsoft.foundry

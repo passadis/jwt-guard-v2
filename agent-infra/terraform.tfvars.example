@@ -18,6 +18,10 @@ log_analytics_workspace_resource_id = "/subscriptions/00000000-0000-0000-0000-00
 # identity is a separate reviewed post-deployment RBAC operation.
 hosted_agent_principal_id = null
 
+# Leave null for the foundation plan. Set this to the existing SentinelApp
+# managed-identity principal only in the reviewed post-deployment RBAC plan.
+sentinel_app_principal_id = null
+
 model_deployment_name = "gpt-4o"
 model_name            = "gpt-4o"
 model_version         = "2024-11-20"

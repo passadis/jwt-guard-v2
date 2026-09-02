@@ -1027,7 +1027,29 @@ Hosted validation exercised ordinary streaming, live gateway configuration, rece
 
 All correlated model calls and dependencies succeeded. A count-only scan found zero JWT-like values, bearer values, client-secret values, private keys, or storage keys. Terraform then reported no changes. Application Gateway, SentinelGate, DNS, networking, certificates, agent infrastructure, and agent Terraform state were unchanged. A reviewed Embedded rollback plan remains available. Live cross-user isolation requires separately approved test identities; local contract tests cover owner/session separation and cross-owner evidence denial.
 
-## 31. Final operational takeaway
+## 31. FN-029 — Direct IQ invocation avoids post-retrieval model quota failure
+
+**Status:** Verified with immutable Hosted Agent version 8 on 2 September 2026
+**Severity:** Informational
+**Area:** Foundry Hosted Agent and Foundry IQ
+
+Hosted versions 5 through 7 established that the IQ toolbox and Search knowledge base were healthy: the exact knowledge retrieval function completed and returned approved repository evidence. The normal hosted model-tool loop nevertheless required a model continuation after the large retrieval result. On a small shared model deployment, that continuation could exceed the token-per-minute window, producing either no final user text or a rate-limit failure even though retrieval itself succeeded. Retrying the same orchestration did not correct the boundary.
+
+Version 8 keeps model-driven routing for live gateway, log, token-evidence, and fixed simulation requests, but handles the reviewed architecture and trust-boundary question class deterministically. The Agent Framework wrapper directly invokes the exact enumerated `jwt-sentinel-iq___knowledge_base_retrieve` function with a bounded question, parses the returned evidence, verifies topic-specific facts, restricts citations to approved repository Markdown paths or exact Microsoft Learn URLs, and renders a bounded answer without a second model call. A missing tool, malformed evidence, missing required fact, or unsafe citation fails closed.
+
+Fresh-session verification proved all of the following:
+
+- caller-token replay was refused before model or tool execution;
+- the raw Hosted Responses stream contained a completed call to the exact IQ retrieval function;
+- the final answer correctly preserved the Container App FQDN as backend Host and TLS/SNI name and treated `x-original-host` only as supplementary context;
+- citations were exact returned repository paths;
+- SentinelApp's delegated `/api/agent/chat` path reached Hosted version 8 through managed identity and streamed the same cited IQ answer;
+- the allowlisted `wrong_audience` scenario reached SentinelApp's managed-identity broker and observed the expected 401;
+- the promotion added only the broker app-role assignment and changed SentinelApp configuration in place; Application Gateway, SentinelGate, DNS, certificates, networking, Search, and the isolated agent state were unchanged.
+
+The completed environment uses `Hosted` as its normal mode. `Embedded` remains installed and is selected only through a reviewed server-side configuration plan; there is no browser or public API mode switch and no silent per-request fallback.
+
+## 32. Final operational takeaway
 
 The hardest failures were not ordinary application bugs. They occurred at the boundaries between:
 

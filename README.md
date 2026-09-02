@@ -12,19 +12,19 @@
 
 JWT Sentinel is an educational Azure deployment built around a real security boundary. A static MSAL SPA signs users in, Application Gateway validates tokens on a dedicated protected listener, and a minimal SentinelGate backend accepts only the gateway-injected canonical identity. The Gate Explainer reads the actual gateway configuration and access logs, decodes sanitized token evidence, and runs controlled allow/deny scenarios.
 
-The accepted baseline promoted **Microsoft Foundry Hosted Agent version 7** with **Foundry IQ** after independent parity validation. A clean rebuild starts with the in-process Microsoft Agent Framework 1.15 implementation and adds Hosted/IQ through the later gated workflow; Embedded remains the immediate, Terraform-controlled rollback path.
+The intended operating model uses a **Microsoft Foundry Hosted Agent** with **Foundry IQ**. A clean rebuild temporarily starts with the in-process Microsoft Agent Framework 1.15 implementation because the managed endpoint and runtime identity do not exist yet. After the isolated Hosted/IQ deployment is verified, `Hosted` becomes the normal mode and `Embedded` remains the Terraform-controlled rollback path.
 
 ## Architecture
 
 ![JWT Sentinel Stage 1 and Hosted Agent architecture](images/jwt-guard-main.png)
 
-The running solution keeps the protected application plane and the Hosted Agent knowledge plane in separate resource groups and permanently separate Terraform states. SentinelApp reaches immutable Hosted Agent version 7 through its managed Responses endpoint; the agent reaches approved documentation through the Foundry IQ toolbox and Azure AI Search. Application Gateway remains exclusively in the Stage 1 ownership boundary.
+The solution keeps the protected application plane and the Hosted Agent knowledge plane in separate resource groups and permanently separate Terraform states. SentinelApp reaches a pinned immutable Hosted Agent version through its managed Responses endpoint; the agent reaches approved documentation through the Foundry IQ toolbox and Azure AI Search. Application Gateway remains exclusively in the Stage 1 ownership boundary.
 
 ### Agent evolution: Embedded to Hosted
 
 JWT Sentinel began with GateExplainer embedded in SentinelApp. That first implementation established the tool contracts, authorization rules, session ownership, deterministic simulations, and evidence/redaction behavior without adding a second runtime boundary.
 
-The Hosted Agent and Foundry IQ capability was then built independently in a separate resource group and Terraform state. SentinelApp gained a server-side `Embedded`/`HostedShadow`/`Hosted` router, while token-sensitive decoding and deterministic scenarios remained behind its authenticated app-only broker. Shadow validation compared the two implementations without exposing Hosted output to users. After tool parity, citations, session continuity, failure handling, telemetry redaction, latency, and rollback were validated, `Hosted` became the active mode. The original embedded implementation remains installed as the deliberate rollback path; switching modes changes SentinelApp configuration only and never requires an Application Gateway change or restart.
+The Hosted Agent and Foundry IQ capability is built independently in a separate resource group and Terraform state. SentinelApp has a server-side `Embedded`/`HostedShadow`/`Hosted` router, while token-sensitive decoding and deterministic scenarios remain behind its authenticated app-only broker. `Hosted` is the target operating mode, `Embedded` is the deliberate rollback path, and `HostedShadow` is an optional advanced parity mode rather than a mandatory deployment step. Switching modes changes SentinelApp configuration only and never requires an Application Gateway change or restart.
 
 ### Why two hostnames and two Container Apps?
 
@@ -46,7 +46,7 @@ infra/                         Stage 1 Terraform: gateway, Entra, network, ACA, 
 agent-infra/                   permanently isolated Hosted Agent/IQ foundation state
 src/SentinelApp/               .NET 10 SPA, authenticated APIs, BFF, agent router
 src/SentinelGate/              .NET 10 minimal protected backend
-src/SentinelHostedAgent/       Hosted Agent v7 source and evidence-tool contracts
+src/SentinelHostedAgent/       Hosted Agent source and evidence-tool contracts
 knowledge/                     versioned, allowlisted Foundry IQ corpus definition
 evaluation/                    hosted-agent datasets and evaluator configuration
 scripts/                       deploy, certificate, demo, knowledge, and static checks
@@ -162,7 +162,9 @@ A successful response must contain the expected SentinelGate schema and tenant, 
 
 ### 5. Add the Hosted Agent and Foundry IQ
 
-Stage 1 was independently usable with the embedded agent before the Hosted Agent was promoted. The Hosted Agent, Search knowledge plane, monitoring, evaluations, and RBAC live permanently in a separate resource group and `agent-infra` state. Follow the [migration design](docs/AGENT-MIGRATION.md) and [switch guide](docs/HOSTED-AGENT-SWITCH.md); do not merge the states or run `azd provision` over Terraform-owned resources.
+Stage 1 is independently usable with the embedded agent while the managed endpoint and runtime identity are created. The Hosted Agent, Search knowledge plane, monitoring, evaluations, and RBAC live permanently in a separate resource group and `agent-infra` state. Follow the [Hosted Agent and Foundry IQ deployment path](docs/HOSTED-AGENT-IQ-QUICKSTART.md) for the exact bootstrap order; do not merge the states or run `azd provision` over Terraform-owned resources.
+
+Before `azd deploy`, verify that the root `azure.yaml` project binding matches the Foundry project output from the selected agent state. The azd environment name alone does not replace a stale literal project key or endpoint copied from another deployment.
 
 ## Demo storyline
 
@@ -178,9 +180,9 @@ SentinelGate requires exactly two canonical GUIDs, verifies the expected tenant,
 
 ![Sequence flow for Hosted Agent evidence retrieval and explanation](images/jwt-sentinel-hosted-agent-flow.png)
 
-The authenticated Agent request remains behind SentinelApp's delegated policy and owner-bound session mapping. The browser's bearer token is never sent to Hosted Agent v7. The agent uses its dedicated identity for scoped ARM and Log Analytics reads and retrieves approved documentation through the toolbox, knowledge-base MCP endpoint, knowledge source, and Search index.
+The authenticated Agent request remains behind SentinelApp's delegated policy and owner-bound session mapping. The browser's bearer token is never sent to the Hosted Agent. The agent uses its dedicated identity for scoped ARM and Log Analytics reads and retrieves approved documentation through the toolbox, knowledge-base MCP endpoint, knowledge source, and Search index.
 
-Token decoding and controlled simulations cross back through SentinelApp's app-only evidence broker. Only bounded sanitized evidence or fixed scenarios are accepted: the browser cannot select a target host, path, scheme, endpoint, agent version, or execution mode. The final response is streamed back with attributable live evidence and Foundry IQ citations.
+Token decoding and controlled simulations cross back through SentinelApp's app-only evidence broker. Only bounded sanitized evidence or fixed scenarios are accepted: the browser cannot select a target host, path, scheme, endpoint, agent version, or execution mode. The final response is streamed back with attributable live evidence. For architecture and design explanations, the Hosted Agent deterministically requires the fixed Foundry IQ retrieval tool; a knowledge-grounded answer is accepted only when that call returns adequate evidence and the answer cites its returned sources. Merely attaching a toolbox is not proof that IQ ran.
 
 Try asking:
 
@@ -202,7 +204,7 @@ The Hosted Agent identity has only the scoped gateway, Log Analytics, and Search
 
 ## Switching Hosted and Embedded modes
 
-The execution mode is operator-controlled configuration—not a browser button or public API:
+The target execution mode is `Hosted`; the embedded implementation is retained as an operator-controlled rollback. The switch is configuration—not a browser button or public API:
 
 ```hcl
 agent_mode = "Hosted"   # active managed endpoint
@@ -219,7 +221,7 @@ Changing the file alone does nothing in Azure. Produce and review a Terraform pl
 4. **A gateway restart requires recovery validation.** After an explicitly approved restart, increment `gateway_config_generation`, review the full in-place AzAPI update, apply it, and rerun the entire matrix.
 5. **Preserve the API identifier-URI lifecycle safeguard.** Without `ignore_changes = [identifier_uris]`, later Entra application updates can break `api://<clientId>` token acquisition.
 6. **A matching `x-original-host` is not authentication.** It is client-originated routing context; the dedicated listener, JWT `Deny` rule, isolated backend, ingress boundary, and injected-identity parsing form the trust boundary.
-7. **Hosted Agent and Foundry IQ are preview dependencies.** Keep the embedded implementation, bounded retry rules, telemetry, evaluation evidence, and independent cost ownership until sustained parity is accepted.
+7. **Hosted Agent and Foundry IQ are preview dependencies.** Keep the embedded implementation, bounded retry rules, telemetry, and independent cost ownership. A configured toolbox proves availability, not invocation; require a real IQ tool event and returned citations for grounded answers.
 
 See the [field notes](docs/FIELD-NOTES.md) for reproduced symptoms, evidence, and recovery procedures.
 
@@ -245,9 +247,13 @@ Cleanup spans two independent Terraform states and deliberately protected resour
 - [Deployment runbook](docs/DEPLOYMENT-RUNBOOK.md) — clean deployment, certificates, validation, recovery, and cleanup.
 - [Test matrix](docs/TEST-MATRIX.md) — end-to-end acceptance checklist.
 - [Operator guide](docs/OPERATOR-GUIDE.md) — daily use, gateway and Agent checks, IQ grounding/telemetry validation, troubleshooting, and safe mode switching.
+- [Demo guide](docs/DEMO-GUIDE.md) — short presenter runbook for scripts, expected results, Hosted Agent/IQ prompts, and Embedded rollback.
+- [Hosted Agent and Foundry IQ deployment path](docs/HOSTED-AGENT-IQ-QUICKSTART.md) — the concise two-pass Hosted deployment, RBAC, knowledge publication, toolbox, verification, and promotion sequence.
 - [Field notes](docs/FIELD-NOTES.md) — verified preview behavior and operational discoveries.
 - [Agent migration design](docs/AGENT-MIGRATION.md) — permanent isolation, RBAC, evaluation, rollback, and cost model.
 - [Hosted Agent switch guide](docs/HOSTED-AGENT-SWITCH.md) — Hosted/Embedded promotion and rollback procedure.
+- [Hosted Agent v3 gate outcome](docs/HOSTED-AGENT-V3-GATE.md) — historical evidence for the rejected prompt-only replay boundary.
+- [Hosted Agent v4 corrective gate](docs/HOSTED-AGENT-V4-GATE.md) — deterministic pre-model refusal, IQ, evaluator-v2, quota, deployment, and re-evaluation gates.
 
 ## Community
 
